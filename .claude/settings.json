@@ -10,10 +10,12 @@
       "Bash(gh auth *)",
       "Bash(git remote *)",
       "Bash(ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null && git push)",
-      "Bash(brew install *)"
+      "Bash(brew install *)",
+      "Bash(sed -n '/^safe_update_package/,/^}/p' /Users/shapp/Documents/Git/Linjw/LjwOpenWrt/Scripts/Packages.sh)"
     ],
     "additionalDirectories": [
-      "/Users/shapp/.ssh"
+      "/Users/shapp/.ssh",
+      "/Users/shapp/Documents/Git/Linjw/LjwOpenWrt/Scripts"
     ]
   }
 }
