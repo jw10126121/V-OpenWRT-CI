@@ -77,4 +77,4 @@ write_start_notify_content() {
 write_start_notify_content "${GITHUB_ENV}"
 write_start_notify_content "${GITHUB_OUTPUT}"
 
-echo "开始通知内容已生成"
+echo "【Lin】开始通知内容已生成"

@@ -4,8 +4,16 @@
 
 PKG_PATH="$GITHUB_WORKSPACE/wrt/package/"
 
-#预置HomeProxy数据
-if [ -d *"homeproxy"* ]; then
+# 预置 HomeProxy 规则数据（默认关闭，需要时改为 true）
+PRELOAD_HOMEPROXY=false
+
+### --- 预置方法 --- ###
+
+# 预置 HomeProxy 规则数据
+preload_homeproxy() {
+	[ "$PRELOAD_HOMEPROXY" = true ] || return 0
+	[ -d *"homeproxy"* ] || return 0
+
 	echo " "
 
 	HP_RULE="surge"
@@ -23,52 +31,70 @@ if [ -d *"homeproxy"* ]; then
 
 	cd .. && rm -rf ./$HP_RULE/
 
-	cd $PKG_PATH && echo "homeproxy date has been updated!"
-fi
+	cd $PKG_PATH && echo "【Lin】homeproxy date has been updated!"
+}
 
-#修改argon主题字体和颜色
-if [ -d *"luci-theme-argon"* ]; then
-	echo " " && cd ./luci-theme-argon/
+### --- 主题修复方法 --- ###
+
+# 修改 argon 主题字体和颜色
+fix_theme_argon() {
+	[ -d *"luci-theme-argon"* ] || return 0
+	cd ./luci-theme-argon/
 
 	sed -i "s/primary '.*'/primary '#31a1a1'/; s/'0.2'/'0.5'/; s/'none'/'bing'/; s/'600'/'normal'/" ./luci-app-argon-config/root/etc/config/argon
 
-	cd $PKG_PATH && echo "theme-argon has been fixed!"
-fi
+	cd $PKG_PATH && echo "【Lin】theme-argon has been fixed!"
+}
 
-#修改aurora菜单式样
-if [ -d *"luci-app-aurora-config"* ]; then
-	echo " " && cd ./luci-app-aurora-config/
+# 修改 aurora 菜单式样
+fix_theme_aurora() {
+	[ -d *"luci-app-aurora-config"* ] || return 0
+	cd ./luci-app-aurora-config/
 
 	sed -i "s/nav_submenu_type '.*'/nav_submenu_type 'boxed-dropdown'/g" $(find ./root/usr/share/aurora/ -type f -name "*.template")
 
-	cd $PKG_PATH && echo "theme-aurora has been fixed!"
-fi
+	cd $PKG_PATH && echo "【Lin】theme-aurora has been fixed!"
+}
 
-#修改mini-diskmanager菜单位置
-if [ -d *"luci-app-mini-diskmanager"* ]; then
-	echo " " && cd ./luci-app-mini-diskmanager/
+### --- 插件修复方法 --- ###
+
+# 修改 mini-diskmanager 菜单位置
+fix_mini_diskmanager() {
+	[ -d *"luci-app-mini-diskmanager"* ] || return 0
+	cd ./luci-app-mini-diskmanager/
 
 	sed -i "s/services/system/g" ./luci-app-mini-diskmanager/root/usr/share/luci/menu.d/luci-app-mini-diskmanager.json
 
-	cd $PKG_PATH && echo "mini-diskmanager has been fixed!"
-fi
+	cd $PKG_PATH && echo "【Lin】mini-diskmanager has been fixed!"
+}
 
-#修复TailScale配置文件冲突
-TS_FILE=$(find ../feeds/packages/ -maxdepth 3 -type f -wholename "*/tailscale/Makefile")
-if [ -f "$TS_FILE" ]; then
-	echo " "
+# 修复 TailScale 配置文件冲突
+fix_tailscale() {
+	local ts_file
+	ts_file=$(find ../feeds/packages/ -maxdepth 3 -type f -wholename "*/tailscale/Makefile")
+	[ -f "$ts_file" ] || return 0
 
-	sed -i '/\/files/d' $TS_FILE
+	sed -i '/\/files/d' "$ts_file"
 
-	cd $PKG_PATH && echo "tailscale has been fixed!"
-fi
+	cd $PKG_PATH && echo "【Lin】tailscale has been fixed!"
+}
 
-#修复Rust编译失败
-RUST_FILE=$(find ../feeds/packages/ -maxdepth 3 -type f -wholename "*/rust/Makefile")
-if [ -f "$RUST_FILE" ]; then
-	echo " "
+# 修复 Rust 编译失败
+fix_rust() {
+	local rust_file
+	rust_file=$(find ../feeds/packages/ -maxdepth 3 -type f -wholename "*/rust/Makefile")
+	[ -f "$rust_file" ] || return 0
 
-	sed -i 's/ci-llvm=true/ci-llvm=false/g' $RUST_FILE
+	sed -i 's/ci-llvm=true/ci-llvm=false/g' "$rust_file"
 
-	cd $PKG_PATH && echo "rust has been fixed!"
-fi
+	cd $PKG_PATH && echo "【Lin】rust has been fixed!"
+}
+
+### --- 执行 --- ###
+
+preload_homeproxy
+fix_theme_argon
+fix_theme_aurora
+fix_mini_diskmanager
+fix_tailscale
+fix_rust

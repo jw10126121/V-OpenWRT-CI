@@ -70,5 +70,5 @@ find ./bin/targets/ -type f -exec mv -f {} ./upload/ \;
 # 释放磁盘空间（替代 make clean，避免在 organize 之前清理导致 packages 丢失）
 rm -rf ./build_dir ./staging_dir ./tmp ./dl ./feeds
 
-echo "编译产物整理完成，upload/ 目录内容："
+echo "【Lin】编译产物整理完成，upload/ 目录内容："
 ls -lh ./upload/

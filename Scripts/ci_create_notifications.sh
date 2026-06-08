@@ -90,4 +90,4 @@ write_notify_content() {
 write_notify_content "${GITHUB_ENV}"
 write_notify_content "${GITHUB_OUTPUT}"
 
-echo "通知内容已生成"
+echo "【Lin】通知内容已生成"

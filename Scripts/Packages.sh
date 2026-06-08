@@ -16,21 +16,22 @@ UPDATE_PACKAGE() {
 	# 删除本地可能存在的不同名称的软件包
 	for NAME in "${PKG_LIST[@]}"; do
 		# 查找匹配的目录
-		echo "Search directory: $NAME"
+		echo "【Lin】Search directory: $NAME"
 		local FOUND_DIRS=$(find ../feeds/luci/ ../feeds/packages/ -maxdepth 3 -type d -iname "*$NAME*" 2>/dev/null)
 
 		# 删除找到的目录
 		if [ -n "$FOUND_DIRS" ]; then
 			while read -r DIR; do
 				rm -rf "$DIR"
-				echo "Delete directory: $DIR"
+				echo "【Lin】Delete directory: $DIR"
 			done <<< "$FOUND_DIRS"
 		else
-			echo "Not fonud directory: $NAME"
+			echo "【Lin】Not found directory: $NAME"
 		fi
 	done
 
 	# 克隆 GitHub 仓库
+	echo "【Lin】Clone: $PKG_REPO ($PKG_BRANCH)"
 	git clone --depth=1 --single-branch --branch $PKG_BRANCH "https://github.com/$PKG_REPO.git"
 
 	# 处理克隆的仓库
@@ -40,6 +41,81 @@ UPDATE_PACKAGE() {
 	elif [[ "$PKG_SPECIAL" == "name" ]]; then
 		mv -f $REPO_NAME $PKG_NAME
 	fi
+	echo "【Lin】Downloaded: $PKG_NAME"
+}
+
+# 从一个仓库中提取多个子包目录（适用于一个仓库维护多个插件的场景）
+# UPDATE_PACKAGE_LIST "pkg1 pkg2 pkg3" "owner/repo" "branch"
+UPDATE_PACKAGE_LIST() {
+	local PKG_LIST=($1)
+	local PKG_REPO=$2
+	local PKG_BRANCH=$3
+	local REPO_NAME=${PKG_REPO#*/}
+	local TMP_DIR="pkglist_${REPO_NAME}"
+
+	echo " "
+
+	# 删除所有同名旧包
+	for NAME in "${PKG_LIST[@]}"; do
+		echo "【Lin】Search directory: $NAME"
+		local FOUND_DIRS=$(find ./ ../feeds/luci/ ../feeds/packages/ -maxdepth 3 -type d -iname "$NAME" 2>/dev/null)
+		if [ -n "$FOUND_DIRS" ]; then
+			while read -r DIR; do
+				rm -rf "$DIR"
+				echo "【Lin】Delete directory: $DIR"
+			done <<< "$FOUND_DIRS"
+		else
+			echo "【Lin】Not found directory: $NAME"
+		fi
+	done
+
+	# 临时克隆仓库
+	echo "【Lin】Clone: $PKG_REPO ($PKG_BRANCH)"
+	git clone --depth=1 --single-branch --branch $PKG_BRANCH "https://github.com/$PKG_REPO.git" "$TMP_DIR"
+
+	# 逐个复制目标目录到 package/
+	for NAME in "${PKG_LIST[@]}"; do
+		if [ -d "./$TMP_DIR/$NAME" ]; then
+			cp -rf "./$TMP_DIR/$NAME" ./
+			echo "【Lin】Copied: $NAME"
+		else
+			echo "【Lin】Warning: $NAME not found in repository"
+		fi
+	done
+
+	# 删除临时仓库
+	rm -rf "./$TMP_DIR"
+	echo "【Lin】Package list downloaded: ${PKG_LIST[*]}"
+}
+
+# 修复 pushbot 运行时兼容性（CPU温度、网络测试URL）
+fix_pushbot() {
+	local pushbot_dir pushbot_file
+	pushbot_dir=$(find ./*/ -maxdepth 3 -type d -iname "luci-app-pushbot" -prune)
+	[ -n "$pushbot_dir" ] && [ -f "$pushbot_dir/root/usr/bin/pushbot/pushbot" ] || return 0
+
+	pushbot_file="$pushbot_dir/root/usr/bin/pushbot/pushbot"
+	sed -i 's/local cputemp=`soc_temp`/local cputemp=`tempinfo`/' "$pushbot_file"
+	sed -i 's/CPU：\${cputemp}℃/\${cputemp}/' "$pushbot_file"
+	sed -i "s| https://www.qidian.com https://www.douban.com||g" "$pushbot_file"
+	echo "【Lin】pushbot has been fixed!"
+}
+
+# 修复 wechatpush 运行时兼容性（禁用硬盘检查、CPU温度、钉钉模板）
+fix_wechatpush() {
+	local wechatpush_dir wechatpush_file
+	wechatpush_dir=$(find ./*/ -maxdepth 3 -type d -iname "luci-app-wechatpush" -prune)
+	[ -n "$wechatpush_dir" ] && [ -f "$wechatpush_dir/root/usr/share/wechatpush/wechatpush" ] || return 0
+
+	wechatpush_file="$wechatpush_dir/root/usr/share/wechatpush/wechatpush"
+	sed -i '/^#/!{/^[[:blank:]]*\[ -z "\$1" \] && get_disk/s/^[[:blank:]]*/#&/;}' "$wechatpush_file"
+	sed -i '\|>"\$output_dir/cputemp"|s/soc_temp/tempinfo/g' "$wechatpush_file"
+	sed -i 's/$(translate "CPU:") ${cputemp}℃/${cputemp}/g' "$wechatpush_file"
+
+	# 复制钉钉推送模板
+	[ -f "$GITHUB_WORKSPACE/Scripts/patch/wechatpush_diy.json" ] && \
+		cp -p "$GITHUB_WORKSPACE/Scripts/patch/wechatpush_diy.json" "$wechatpush_dir/root/usr/share/wechatpush/api/diy.json"
+	echo "【Lin】wechatpush has been fixed!"
 }
 
 # 调用示例
@@ -61,13 +137,24 @@ UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
 UPDATE_PACKAGE "passwall" "Openwrt-Passwall/openwrt-passwall" "main" "pkg"
 UPDATE_PACKAGE "passwall2" "Openwrt-Passwall/openwrt-passwall2" "main" "pkg"
 
+UPDATE_PACKAGE "luci-app-onliner" "danchexiaoyang/luci-app-onliner" "main"
+UPDATE_PACKAGE "luci-app-easytier" "EasyTier/luci-app-easytier" "v2.6.4"
+
+UPDATE_PACKAGE "luci-app-pushbot" "zzsj0928/luci-app-pushbot" "master"
+fix_pushbot
+
+UPDATE_PACKAGE "luci-app-wechatpush" "tty228/luci-app-wechatpush" "master"
+fix_wechatpush
+
+UPDATE_PACKAGE "luci-app-socat" "Lienol/openwrt-package" "main"
+UPDATE_PACKAGE_LIST "luci-app-frpc luci-app-frps" "superzjg/luci-app-frpc_frps" "main"
+
 UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 
 UPDATE_PACKAGE "athena-led" "unraveloop/JDC-AX6600-Athena-LED-Controller" "main"
 UPDATE_PACKAGE "ddns-go" "sirpdboy/luci-app-ddns-go" "main"
 UPDATE_PACKAGE "diskman" "sbwml/luci-app-diskman" "main"
 UPDATE_PACKAGE "diskmanager" "4IceG/luci-app-mini-diskmanager" "main"
-UPDATE_PACKAGE "easytier" "EasyTier/luci-app-easytier" "main"
 UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5" "" "v2dat"
 UPDATE_PACKAGE "netspeedtest" "sirpdboy/netspeedtest" "main" "" "homebox ookla-speedtest"
 UPDATE_PACKAGE "netwizard" "sirpdboy/luci-app-netwizard" "main"

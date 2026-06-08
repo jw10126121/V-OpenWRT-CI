@@ -147,6 +147,7 @@ argon|luci-theme-argon_ luci-i18n-argon-zh-cn_ curl_ jsonfilter_
 argonconfig|luci-app-argon-config_ luci-i18n-argon-config-zh-cn_ luci-theme-argon_
 onliner|luci-app-onliner_ luci-i18n-onliner-zh-cn_ arp-scan_ libpcap_
 wolplus|luci-app-wolplus_ luci-i18n-wolplus-zh-cn_ etherwake_
+watchcat|luci-app-watchcat_ luci-i18n-watchcat-zh-cn_
 versync|luci-app-verysync_ verysync_
 vlmcsd|luci-app-vlmcsd_ luci-i18n-vlmcsd-zh-cn_ vlmcsd_
 netspeedtest|luci-app-netspeedtest_ luci-i18n-netspeedtest-zh-cn_ speedtest-cli_ iperf3_ curl_ jsonfilter_ taskset_

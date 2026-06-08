@@ -260,6 +260,32 @@ jobs:
           chmod +x $GITHUB_WORKSPACE/Scripts/ci_organize_outputs.sh
           bash $GITHUB_WORKSPACE/Scripts/ci_organize_outputs.sh
 
+      - name: Generate Release Description
+        if: env.UPLOAD_TYPE == 'release' && env.COMPILE_STATUS == 'success'
+        working-directory: ./wrt
+        run: |
+          # 构建固件说明
+          SYSTEM_DESC="【${WRT_INFO}】
+          固件类型：[常规版]
+          支持平台：${WRT_TARGET}
+          源码来源：${WRT_SOURCE}
+          源码分支：${WRT_BRANCH}
+          源码HASH：${WRT_HASH}
+          默认地址：${WRT_IP}
+          默认密码：${WRT_PW}
+          WIFI名称：${WRT_SSID}
+          WIFI密码：${WRT_WORD}
+          内核版本：${WRT_KVER}"
+
+          # 调用 readme.sh 生成 Release 版本（HTML details 折叠格式）
+          bash $GITHUB_WORKSPACE/Scripts/readme.sh \
+            -c ./.config \
+            -o ./release_desc.txt \
+            -s "${SYSTEM_DESC}" \
+            -r 'true'
+
+          echo "【Lin】Release 说明已生成"
+
       - name: Release Firmware
         if: env.UPLOAD_TYPE == 'release' && env.COMPILE_STATUS == 'success'
         env:
@@ -269,40 +295,22 @@ jobs:
           release_files=($(find ./wrt/upload/ -type f))
 
           if [ ${#release_files[@]} -eq 0 ]; then
-            echo "错误：未找到可上传的固件文件"
+            echo "【Lin】错误：未找到可上传的固件文件"
             exit 1
           fi
 
-          release_body="这是个平台固件包，内含多个设备！
-          请注意选择你需要的设备固件！
-          不要问，刷就完事了！
-
-          全系带开源硬件加速，别问了！
-
-          源码：${WRT_REPO}
-          分支：${WRT_BRANCH}
-          提交：${WRT_HASH}
-
-          配置：${WRT_CONFIG}
-          平台：${WRT_TARGET}
-
-          登录地址：${WRT_IP}
-          登录密码：${WRT_PW}
-
-          WIFI名称：${WRT_SSID}
-          WIFI密码：${WRT_WORD}
-
-          内核版本：${WRT_KVER}
-          插件列表：${WRT_LIST}"
-
-          if gh release view "${release_tag}" >/dev/null 2>&1; then
-            echo "更新已有 Release：${release_tag}"
-            gh release edit "${release_tag}" --title "${release_tag}" --notes "${release_body}"
-            gh release upload "${release_tag}" "${release_files[@]}" --clobber
+          # 优先使用生成的 Release 说明文件
+          if [ -f ./wrt/release_desc.txt ]; then
+            gh release create "${release_tag}" "${release_files[@]}" \
+              --title "${release_tag}" \
+              --notes-file ./wrt/release_desc.txt
           else
-            echo "创建新的 Release：${release_tag}"
-            gh release create "${release_tag}" "${release_files[@]}" --title "${release_tag}" --notes "${release_body}"
+            gh release create "${release_tag}" "${release_files[@]}" \
+              --title "${release_tag}" \
+              --notes "固件发布：${release_tag}"
           fi
+
+          echo "【Lin】Release 已发布：${release_tag}"
 
       - name: Upload Firmware To Artifact
         if: env.UPLOAD_TYPE == 'artifact' && env.COMPILE_STATUS == 'success'
