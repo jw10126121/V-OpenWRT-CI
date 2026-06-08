@@ -115,6 +115,13 @@ jobs:
           echo "WRT_KVER=none" >> $GITHUB_ENV
           echo "WRT_LIST=none" >> $GITHUB_ENV
 
+          # 缓存相关变量
+          WRT_CONFIG_LABEL="${WRT_CONFIG}-${WRT_FIREWALL^^}"
+          echo "WRT_CONFIG_LABEL=$WRT_CONFIG_LABEL" >> $GITHUB_ENV
+
+          overlay_hash=$(printf '%s' "$WRT_CONFIG" | sha256sum | cut -c1-12)
+          echo "WRT_OVERLAYS_HASH=$overlay_hash" >> $GITHUB_ENV
+
       - name: Show Build Config (显示编译配置)
         run: |
           echo "=========================================="
@@ -143,6 +150,14 @@ jobs:
 
           cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
+          # 缓存相关：提取 DEVICE_SUBTARGET 和 WRT_VER
+          WRT_TARGET_FULL=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' ./Config/$WRT_CONFIG.txt)
+          DEVICE_SUBTARGET="${WRT_TARGET_FULL#*_}"
+          echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
+
+          WRT_REPO_NAME=$(basename "$WRT_REPO" .git)
+          echo "WRT_VER=${WRT_REPO_NAME}-${WRT_BRANCH}" >> $GITHUB_ENV
+
           # GitHub Action 移除国内下载源
           PROJECT_MIRRORS_FILE="./scripts/projectsmirrors.json"
           if [ -f "$PROJECT_MIRRORS_FILE" ]; then
@@ -158,10 +173,10 @@ jobs:
         if: env.WRT_TEST != 'true'
         uses: actions/cache/restore@v5
         with:
-          key: toolchain-${{ runner.os }}-${{ env.WRT_BRANCH }}-${{ env.WRT_HASH }}-${{ env.WRT_CONFIG }}
+          key: toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-${{ env.WRT_CONFIG_LABEL }}-${{ env.WRT_OVERLAYS_HASH }}
           restore-keys: |
-            toolchain-${{ runner.os }}-${{ env.WRT_BRANCH }}-${{ env.WRT_HASH }}-
-            toolchain-${{ runner.os }}-${{ env.WRT_BRANCH }}-${{ env.WRT_HASH }}
+            toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-
+            toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}
           path: |
             ./wrt/staging_dir/host*
             ./wrt/staging_dir/tool*
@@ -171,9 +186,9 @@ jobs:
         if: env.WRT_TEST != 'true'
         uses: actions/cache/restore@v5
         with:
-          key: ccache-${{ runner.os }}-${{ env.WRT_BRANCH }}-${{ env.START_TIME }}
+          key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.START_TIME }}
           restore-keys: |
-            ccache-${{ runner.os }}-${{ env.WRT_BRANCH }}-
+            ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-
           path: |
             ./wrt/.ccache
 
@@ -386,7 +401,7 @@ jobs:
         if: always() && env.WRT_TEST != 'true' && steps.restore_toolchain_cache.outputs.cache-hit != 'true' && steps.evaluate_cache_save_inputs.outputs.toolchain_present == 'true'
         uses: actions/cache/save@v5
         with:
-          key: toolchain-${{ runner.os }}-${{ env.WRT_BRANCH }}-${{ env.WRT_HASH }}-${{ env.WRT_CONFIG }}
+          key: toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-${{ env.WRT_CONFIG_LABEL }}-${{ env.WRT_OVERLAYS_HASH }}
           path: |
             ./wrt/staging_dir/host*
             ./wrt/staging_dir/tool*
@@ -395,7 +410,7 @@ jobs:
         if: always() && env.WRT_TEST != 'true' && steps.evaluate_cache_save_inputs.outputs.ccache_present == 'true'
         uses: actions/cache/save@v5
         with:
-          key: ccache-${{ runner.os }}-${{ env.WRT_BRANCH }}-${{ env.START_TIME }}
+          key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.START_TIME }}
           path: |
             ./wrt/.ccache
 
