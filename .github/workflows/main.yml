@@ -107,6 +107,7 @@ jobs:
       - name: Initialization Values
         run: |
           echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
+          echo "START_TIME=$(date +"D%y%m%d_T%H%M%S")" >> $GITHUB_ENV
           echo "WRT_MARK=${GITHUB_REPOSITORY%%/*}" >> $GITHUB_ENV
           echo "WRT_INFO=${WRT_SOURCE%%/*}" >> $GITHUB_ENV
           echo "WRT_TARGET=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' ./Config/$WRT_CONFIG.txt)" >> $GITHUB_ENV
@@ -152,22 +153,32 @@ jobs:
         run: |
           find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
 
-      - name: Check Caches
-        id: check-cache
+      - name: Restore Toolchain Cache
+        id: restore_toolchain_cache
         if: env.WRT_TEST != 'true'
-        uses: actions/cache@main
+        uses: actions/cache/restore@v5
         with:
-          key: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_HASH}}
-          restore-keys: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}
+          key: toolchain-${{ runner.os }}-${{ env.WRT_BRANCH }}-${{ env.WRT_HASH }}-${{ env.WRT_CONFIG }}
+          restore-keys: |
+            toolchain-${{ runner.os }}-${{ env.WRT_BRANCH }}-${{ env.WRT_HASH }}-
+            toolchain-${{ runner.os }}-${{ env.WRT_BRANCH }}-${{ env.WRT_HASH }}
           path: |
-            ./wrt/.ccache
             ./wrt/staging_dir/host*
             ./wrt/staging_dir/tool*
 
-      - name: Update Caches
+      - name: Restore ccache Cache
+        id: restore_ccache_cache
         if: env.WRT_TEST != 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/cache/restore@v5
+        with:
+          key: ccache-${{ runner.os }}-${{ env.WRT_BRANCH }}-${{ env.START_TIME }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ env.WRT_BRANCH }}-
+          path: |
+            ./wrt/.ccache
+
+      - name: Refresh Cache Metadata
+        if: env.WRT_TEST != 'true'
         run: |
           if [ -d "./wrt/staging_dir" ]; then
             find "./wrt/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r DIR; do
@@ -176,18 +187,9 @@ jobs:
 
             mkdir -p ./wrt/tmp && echo "1" > ./wrt/tmp/.build
 
-            echo "toolchain skiped done!"
+            echo "【Lin】toolchain skiped done!"
           else
-            echo "caches missed!"
-          fi
-
-          if ${{steps.check-cache.outputs.cache-hit != 'true'}}; then
-            CACHE_LIST=$(gh cache list --key "$WRT_CONFIG-$WRT_INFO" | cut -f 1)
-            for CACHE_KEY in $CACHE_LIST; do
-              gh cache delete $CACHE_KEY
-            done
-
-            echo "caches cleanup done!"
+            echo "【Lin】caches missed!"
           fi
 
       - name: Update Feeds
@@ -355,6 +357,47 @@ jobs:
         with:
           name: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
           path: ./wrt/upload
+
+      - name: Cleanup Workspace Before Cache Save
+        if: always()
+        working-directory: ./wrt
+        run: |
+          echo "【Lin】为缓存保存释放磁盘空间..."
+          rm -rf build_dir bin tmp logs upload
+          if [ -d staging_dir ]; then
+            find staging_dir -maxdepth 1 -mindepth 1 -type d \( -name 'target-*' -o -name 'packages' -o -name 'pkginfo' \) -exec rm -rf {} +
+          fi
+
+      - name: Evaluate Cache Save Inputs
+        id: evaluate_cache_save_inputs
+        if: always() && env.WRT_TEST != 'true'
+        run: |
+          toolchain_present=false
+          ccache_present=false
+
+          [ -d "./wrt/.ccache" ] && ccache_present=true
+          compgen -G "./wrt/staging_dir/host*" > /dev/null && toolchain_present=true
+          compgen -G "./wrt/staging_dir/tool*" > /dev/null && toolchain_present=true
+
+          echo "toolchain_present=${toolchain_present}" >> "$GITHUB_OUTPUT"
+          echo "ccache_present=${ccache_present}" >> "$GITHUB_OUTPUT"
+
+      - name: Save Toolchain Cache
+        if: always() && env.WRT_TEST != 'true' && steps.restore_toolchain_cache.outputs.cache-hit != 'true' && steps.evaluate_cache_save_inputs.outputs.toolchain_present == 'true'
+        uses: actions/cache/save@v5
+        with:
+          key: toolchain-${{ runner.os }}-${{ env.WRT_BRANCH }}-${{ env.WRT_HASH }}-${{ env.WRT_CONFIG }}
+          path: |
+            ./wrt/staging_dir/host*
+            ./wrt/staging_dir/tool*
+
+      - name: Save ccache Cache
+        if: always() && env.WRT_TEST != 'true' && steps.evaluate_cache_save_inputs.outputs.ccache_present == 'true'
+        uses: actions/cache/save@v5
+        with:
+          key: ccache-${{ runner.os }}-${{ env.WRT_BRANCH }}-${{ env.START_TIME }}
+          path: |
+            ./wrt/.ccache
 
       - name: Generate Notification
         if: always()
