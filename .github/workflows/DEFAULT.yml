@@ -2,7 +2,7 @@
 # Copyright (C) 2026 VIKINGYFY
 
 #CI项目
-name: JD-AX6600
+name: DEFAULT
 
 #CI计划
 on:
@@ -42,6 +42,10 @@ on:
         options:
           - fw3
           - fw4
+      DEFAULT_LANIP:
+        description: '默认登录地址'
+        required: true
+        default: '192.168.0.1'
 
 #CI权限
 permissions: write-all
@@ -61,7 +65,7 @@ jobs:
       WRT_NAME: Linjw
       WRT_SSID: LEDE
       WRT_WORD: none
-      WRT_IP: 192.168.10.1
+      WRT_IP: ${{inputs.DEFAULT_LANIP}}
       WRT_PW: 无
       WRT_REPO: https://github.com/VIKINGYFY/immortalwrt.git
       WRT_BRANCH: main
