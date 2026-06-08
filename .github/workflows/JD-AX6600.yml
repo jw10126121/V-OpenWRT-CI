@@ -49,33 +49,17 @@ jobs:
     uses: ./.github/workflows/WRT-CORE.yml
     secrets: inherit
     with:
-      #编译配置
       WRT_CONFIG: JD-AX6600-WIFI
-      #默认主题
       WRT_THEME: aurora
-      #默认主机名
       WRT_NAME: Linjw
-      #默认WIFI名称
       WRT_SSID: LEDE
-      #默认WIFI密码（为空则无密码）
       WRT_WORD: none
-      #默认地址
       WRT_IP: 192.168.10.1
-      #默认密码，仅作提示，修改无用
       WRT_PW: 无
-      #源码链接
       WRT_REPO: https://github.com/VIKINGYFY/immortalwrt.git
-      #源码分支
       WRT_BRANCH: main
-      #源码名称
       WRT_SOURCE: VIKINGYFY/immortalwrt
-      #插件调整
       WRT_PACKAGE: ${{inputs.PACKAGE}}
-      #仅输出配置文件
       WRT_TEST: ${{inputs.TEST}}
-      #包管理器类型
       WRTPackageManager: ${{inputs.PACKAGE_MANAGER}}
-      #钉钉机器人Token
-      DINGDING_TOKEN: ${{secrets.DINGDING_TOKEN}}
-      #固件上传方式
       UPLOAD_TYPE: ${{inputs.UPLOAD_TYPE}}
