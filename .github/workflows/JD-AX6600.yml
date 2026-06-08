@@ -34,6 +34,14 @@ on:
         options:
           - release
           - artifact
+      FIREWALL:
+        description: '防火墙版本'
+        required: true
+        default: 'fw4'
+        type: choice
+        options:
+          - fw3
+          - fw4
 
 #CI权限
 permissions: write-all
@@ -62,3 +70,4 @@ jobs:
       WRT_TEST: ${{inputs.TEST}}
       WRTPackageManager: ${{inputs.PACKAGE_MANAGER}}
       UPLOAD_TYPE: ${{inputs.UPLOAD_TYPE}}
+      WRT_FIREWALL: ${{inputs.FIREWALL}}

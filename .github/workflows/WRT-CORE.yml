@@ -53,6 +53,11 @@ on:
         required: false
         type: string
         default: 'release'
+      WRT_FIREWALL:
+        description: '防火墙版本：fw3 或 fw4'
+        required: false
+        type: string
+        default: 'fw4'
 
 env:
   WRT_CONFIG: ${{inputs.WRT_CONFIG}}
@@ -70,6 +75,7 @@ env:
   WRTPackageManager: ${{inputs.WRTPackageManager}}
   DINGDING_TOKEN: ${{secrets.DINGDING_TOKEN}}
   UPLOAD_TYPE: ${{inputs.UPLOAD_TYPE}}
+  WRT_FIREWALL: ${{inputs.WRT_FIREWALL}}
 
 jobs:
   core:
@@ -187,6 +193,15 @@ jobs:
           fi
 
           $GITHUB_WORKSPACE/Scripts/Settings.sh
+
+          # 防火墙版本选择（fw4 为默认，fw3 通过 overlay 覆盖）
+          if [ "${WRT_FIREWALL,,}" = "fw3" ]; then
+            FW3_OVERLAY="$GITHUB_WORKSPACE/Config/${WRT_CONFIG}-FW3.txt"
+            [ -f "$FW3_OVERLAY" ] && cat "$FW3_OVERLAY" >> .config
+            echo "【Lin】防火墙版本：fw3"
+          else
+            echo "【Lin】防火墙版本：fw4"
+          fi
 
           # 保存用户原始配置（make defconfig 之前）
           cp -f ./.config ./my_config.txt
