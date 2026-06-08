@@ -9,6 +9,15 @@ on:
   #手动编译
   workflow_dispatch:
     inputs:
+      DEVICE:
+        description: '选择编译设备'
+        required: true
+        default: 'JD-AX6600-WIFI'
+        type: choice
+        options:
+          - JD-AX6600-WIFI
+          - GL-MT6000-WIFI
+          - CMIOT-AX18-NOWIFI
       PACKAGE:
         description: '手动调整插件包，多个请用\n符号隔开。'
         required: false
@@ -53,20 +62,20 @@ permissions: write-all
 #CI任务
 jobs:
   config:
-    name: JD-AX6600-WIFI
+    name: ${{inputs.DEVICE}}-${{inputs.FIREWALL}}
     strategy:
       fail-fast: false
 
     uses: ./.github/workflows/main.yml
     secrets: inherit
     with:
-      WRT_CONFIG: JD-AX6600-WIFI
+      WRT_CONFIG: ${{inputs.DEVICE}}
       WRT_THEME: aurora
       WRT_NAME: Linjw
       WRT_SSID: LEDE
       WRT_WORD: none
       WRT_IP: ${{inputs.DEFAULT_LANIP}}
-      WRT_PW: 无
+      WRT_PW: ' '
       WRT_REPO: https://github.com/VIKINGYFY/immortalwrt.git
       WRT_BRANCH: main
       WRT_SOURCE: VIKINGYFY/immortalwrt

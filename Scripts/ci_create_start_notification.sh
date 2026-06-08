@@ -37,7 +37,7 @@ system_desc=""
     echo "源码来源：${WRT_SOURCE:-unknown}"
     echo "源码分支：${WRT_BRANCH:-main}"
     echo "默认地址：${WRT_IP:-192.168.10.1}"
-    echo "默认密码：无"
+    echo "默认密码：${WRT_PW:-无}"
     echo "WIFI名称：${WRT_SSID:-OpenWrt}"
     echo "WIFI密码：${WRT_WORD:-none}"
 } | while IFS= read -r line; do

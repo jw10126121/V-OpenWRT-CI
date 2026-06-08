@@ -79,7 +79,7 @@ env:
 
 jobs:
   core:
-    name: ${{inputs.WRT_SOURCE}}
+    name: ${{inputs.WRT_CONFIG}}-${{inputs.WRT_FIREWALL}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Projects
@@ -113,6 +113,28 @@ jobs:
           echo "WRT_WIFI=wifi-yes" >> $GITHUB_ENV
           echo "WRT_KVER=none" >> $GITHUB_ENV
           echo "WRT_LIST=none" >> $GITHUB_ENV
+
+      - name: Show Build Config (显示编译配置)
+        run: |
+          echo "=========================================="
+          echo "【Lin】编译配置信息"
+          echo "=========================================="
+          echo "【Lin】配置名称：${WRT_CONFIG}"
+          echo "【Lin】设备平台：${WRT_TARGET:-待解析}"
+          echo "【Lin】默认主题：${WRT_THEME}"
+          echo "【Lin】主机名称：${WRT_NAME}"
+          echo "【Lin】默认地址：${WRT_IP}"
+          echo "【Lin】默认密码：${WRT_PW:-无}"
+          echo "【Lin】WIFI名称：${WRT_SSID}"
+          echo "【Lin】WIFI密码：${WRT_WORD}"
+          echo "【Lin】包管理器：${WRTPackageManager}"
+          echo "【Lin】防火墙版本：${WRT_FIREWALL}"
+          echo "【Lin】上传方式：${UPLOAD_TYPE}"
+          echo "【Lin】源码来源：${WRT_SOURCE}"
+          echo "【Lin】源码分支：${WRT_BRANCH}"
+          echo "【Lin】源码仓库：${WRT_REPO}"
+          echo "【Lin】仅输出配置：${WRT_TEST:-false}"
+          echo "=========================================="
 
       - name: Clone Code
         run: |
@@ -287,7 +309,7 @@ jobs:
           源码分支：${WRT_BRANCH}
           源码HASH：${WRT_HASH}
           默认地址：${WRT_IP}
-          默认密码：${WRT_PW}
+          默认密码：${WRT_PW:-无}
           WIFI名称：${WRT_SSID}
           WIFI密码：${WRT_WORD}
           内核版本：${WRT_KVER}"

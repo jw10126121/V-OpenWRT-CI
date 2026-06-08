@@ -39,6 +39,12 @@ CFG_FILE="./package/base-files/files/bin/config_generate"
 sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $CFG_FILE
 #修改默认主机名
 sed -i "s/hostname='.*'/hostname='$WRT_NAME'/g" $CFG_FILE
+#清除默认登录密码
+SHADOW_FILE="./package/base-files/files/etc/shadow"
+if [ -f "$SHADOW_FILE" ]; then
+	sed -i 's/^root:[^:]*:/root::/' "$SHADOW_FILE"
+	echo "【Lin】已清除默认登录密码"
+fi
 
 #配置文件修改
 echo "CONFIG_PACKAGE_luci=y" >> ./.config
