@@ -226,28 +226,10 @@ jobs:
 
       - name: Package Firmware
         if: steps.compile.outcome == 'success' || env.WRT_TEST == 'true'
+        working-directory: ./wrt
         run: |
-          cd ./wrt/ && mkdir ./upload/
-
-          cp -f ./.config ./upload/Config-"$WRT_CONFIG"-"$WRT_INFO"-"$WRT_BRANCH"-"$WRT_DATE".txt
-
-          if [[ $WRT_TEST != 'true' ]]; then
-            echo "WRT_KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)" >> $GITHUB_ENV
-            echo "WRT_LIST=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^luci-(app|theme)[^ ]*' {} \; | tr '\n' ' ')" >> $GITHUB_ENV
-
-            find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +
-
-            for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*") ; do
-              EXT=$(basename $FILE | cut -d '.' -f 2-)
-              NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($WRT_TARGET\).*")
-              NEW_FILE="$NAME"-"$WRT_INFO"-"$WRT_BRANCH"-"$WRT_WIFI"-"$WRT_DATE"."$EXT"
-              mv -f $FILE ./upload/$NEW_FILE
-            done
-
-            find ./bin/targets/ -type f -exec mv -f {} ./upload/ \;
-
-            make clean -j$(nproc)
-          fi
+          chmod +x $GITHUB_WORKSPACE/Scripts/ci_organize_outputs.sh
+          bash $GITHUB_WORKSPACE/Scripts/ci_organize_outputs.sh
 
       - name: Release Firmware
         if: env.UPLOAD_TYPE == 'release' && env.COMPILE_STATUS == 'success'
@@ -255,7 +237,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           release_tag="${WRT_CONFIG}-${WRT_INFO}-${WRT_BRANCH}-${WRT_DATE}"
-          release_files=(./wrt/upload/*.*)
+          release_files=($(find ./wrt/upload/ -type f))
 
           if [ ${#release_files[@]} -eq 0 ]; then
             echo "错误：未找到可上传的固件文件"
