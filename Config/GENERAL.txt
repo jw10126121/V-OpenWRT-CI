@@ -164,3 +164,4 @@ CONFIG_PACKAGE_usb-modeswitch=y            # USB 模式切换
 CONFIG_PACKAGE_usbmuxd=y                   # iOS USB 守护进程
 CONFIG_PACKAGE_usbutils=y                  # USB 工具
 CONFIG_PACKAGE_xz-utils=y                  # XZ 压缩工具
+CONFIG_PACKAGE_zoneinfo-asia=y             # 亚洲时区数据库
