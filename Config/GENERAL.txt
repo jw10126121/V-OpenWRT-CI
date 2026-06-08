@@ -15,7 +15,7 @@ CONFIG_DEVEL=y                             # 开发模式
 CONFIG_FEED_video=n                        # 关闭 video feed
 CONFIG_TARGET_MULTI_PROFILE=y              # 多机型编译
 CONFIG_TARGET_PER_DEVICE_ROOTFS=y          # 每设备独立 rootfs
-CONFIG_TARGET_ROOTFS_INITRAMFS=n           # 不生成 initramfs
+CONFIG_TARGET_ROOTFS_INITRAMFS=y           # 生成 initramfs（recovery 包）
 
 
 # ------------------------------------------------------------------------

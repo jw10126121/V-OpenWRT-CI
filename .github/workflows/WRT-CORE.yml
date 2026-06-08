@@ -48,11 +48,6 @@ on:
         required: false
         type: string
         default: 'ipk'
-      DINGDING_TOKEN:
-        description: '钉钉机器人Token（可选）'
-        required: false
-        type: string
-        default: ''
       UPLOAD_TYPE:
         description: '固件上传方式：release 或 artifact'
         required: false
@@ -73,7 +68,7 @@ env:
   WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
   WRT_TEST: ${{inputs.WRT_TEST}}
   WRTPackageManager: ${{inputs.WRTPackageManager}}
-  DINGDING_TOKEN: ${{inputs.DINGDING_TOKEN}}
+  DINGDING_TOKEN: ${{secrets.DINGDING_TOKEN}}
   UPLOAD_TYPE: ${{inputs.UPLOAD_TYPE}}
 
 jobs:
@@ -193,7 +188,17 @@ jobs:
 
           $GITHUB_WORKSPACE/Scripts/Settings.sh
 
-          make defconfig -j$(nproc) && make clean -j$(nproc)
+          # 保存用户原始配置（make defconfig 之前）
+          cp -f ./.config ./my_config.txt
+
+          make defconfig -j$(nproc)
+
+          # 生成 seed.config（记录用户自定义配置与默认配置的差异）
+          if [ -f ./scripts/diffconfig.sh ]; then
+            bash ./scripts/diffconfig.sh > ./seed.config
+          fi
+
+          make clean -j$(nproc)
 
       - name: Download Packages
         if: env.WRT_TEST != 'true'
@@ -201,6 +206,25 @@ jobs:
           cd ./wrt/
 
           make download -j$(nproc)
+
+      - name: Generate Start Notification
+        if: always()
+        working-directory: ./wrt
+        run: |
+          chmod +x $GITHUB_WORKSPACE/Scripts/ci_create_start_notification.sh
+          bash $GITHUB_WORKSPACE/Scripts/ci_create_start_notification.sh
+
+      - name: Send Start DingTalk Notification
+        if: always() && env.DINGDING_TOKEN != ''
+        env:
+          DINGDING_MESSAGE: |
+            ${{ env.start_notify_content }}
+        run: |
+          payload=$(python3 -c 'import json, os; print(json.dumps({"msgtype":"text","text":{"content": os.environ["DINGDING_MESSAGE"]}}, ensure_ascii=False))')
+          curl --fail --silent --show-error \
+            -H 'Content-Type: application/json' \
+            -d "$payload" \
+            "https://oapi.dingtalk.com/robot/send?access_token=${DINGDING_TOKEN}"
 
       - name: Compile Firmware
         id: compile
@@ -231,28 +255,10 @@ jobs:
 
       - name: Package Firmware
         if: steps.compile.outcome == 'success' || env.WRT_TEST == 'true'
+        working-directory: ./wrt
         run: |
-          cd ./wrt/ && mkdir ./upload/
-
-          cp -f ./.config ./upload/Config-"$WRT_CONFIG"-"$WRT_INFO"-"$WRT_BRANCH"-"$WRT_DATE".txt
-
-          if [[ $WRT_TEST != 'true' ]]; then
-            echo "WRT_KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)" >> $GITHUB_ENV
-            echo "WRT_LIST=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^luci-(app|theme)[^ ]*' {} \; | tr '\n' ' ')" >> $GITHUB_ENV
-
-            find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +
-
-            for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*") ; do
-              EXT=$(basename $FILE | cut -d '.' -f 2-)
-              NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($WRT_TARGET\).*")
-              NEW_FILE="$NAME"-"$WRT_INFO"-"$WRT_BRANCH"-"$WRT_WIFI"-"$WRT_DATE"."$EXT"
-              mv -f $FILE ./upload/$NEW_FILE
-            done
-
-            find ./bin/targets/ -type f -exec mv -f {} ./upload/ \;
-
-            make clean -j$(nproc)
-          fi
+          chmod +x $GITHUB_WORKSPACE/Scripts/ci_organize_outputs.sh
+          bash $GITHUB_WORKSPACE/Scripts/ci_organize_outputs.sh
 
       - name: Release Firmware
         if: env.UPLOAD_TYPE == 'release' && env.COMPILE_STATUS == 'success'
@@ -307,8 +313,10 @@ jobs:
 
       - name: Generate Notification
         if: always()
+        working-directory: ./wrt
         run: |
-          $GITHUB_WORKSPACE/Scripts/ci_create_notifications.sh
+          chmod +x $GITHUB_WORKSPACE/Scripts/ci_create_notifications.sh
+          bash $GITHUB_WORKSPACE/Scripts/ci_create_notifications.sh
 
       - name: Send DingTalk Notification
         if: always() && env.DINGDING_TOKEN != ''
