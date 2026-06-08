@@ -188,7 +188,14 @@ jobs:
 
           $GITHUB_WORKSPACE/Scripts/Settings.sh
 
-          make defconfig -j$(nproc) && make clean -j$(nproc)
+          make defconfig -j$(nproc)
+
+          # 生成 seed.config（记录用户自定义配置与默认配置的差异）
+          if [ -f ./scripts/diffconfig.sh ]; then
+            bash ./scripts/diffconfig.sh > ./seed.config
+          fi
+
+          make clean -j$(nproc)
 
       - name: Download Packages
         if: env.WRT_TEST != 'true'
