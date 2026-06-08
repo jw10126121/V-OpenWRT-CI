@@ -9,7 +9,7 @@ UPDATE_PACKAGE() {
 	local PKG_BRANCH=$3
 	local PKG_SPECIAL=$4
 	local PKG_LIST=("$PKG_NAME" $5)  # 第5个参数为自定义名称列表
-	local REPO_NAME=${PKG_REPO#*/}
+	local REPO_NAME=$(basename "$PKG_REPO" .git)
 
 	echo " "
 
@@ -30,9 +30,14 @@ UPDATE_PACKAGE() {
 		fi
 	done
 
-	# 克隆 GitHub 仓库
-	echo "【Lin】Clone: $PKG_REPO ($PKG_BRANCH)"
-	git clone --depth=1 --single-branch --branch $PKG_BRANCH "https://github.com/$PKG_REPO.git"
+	# 克隆仓库（支持完整 URL 或 GitHub shorthand）
+	if [[ "$PKG_REPO" =~ ^https?:// ]]; then
+		local CLONE_URL="$PKG_REPO"
+	else
+		local CLONE_URL="https://github.com/$PKG_REPO.git"
+	fi
+	echo "【Lin】Clone: $CLONE_URL ($PKG_BRANCH)"
+	git clone --depth=1 --single-branch --branch $PKG_BRANCH "$CLONE_URL"
 
 	# 处理克隆的仓库
 	if [[ "$PKG_SPECIAL" == "pkg" ]]; then
@@ -118,6 +123,52 @@ fix_wechatpush() {
 	echo "【Lin】wechatpush has been fixed!"
 }
 
+# 修复 frpc/frps init 脚本执行权限
+ensure_luci_app_frp_init_permissions() {
+	local init_file
+
+	for init_file in \
+		"./luci-app-frpc/root/etc/init.d/frpc" \
+		"./luci-app-frps/root/etc/init.d/frps"; do
+		if [ -f "${init_file}" ]; then
+			chmod 0755 "${init_file}"
+			echo "【Lin】已补齐执行权限：${init_file}"
+		fi
+	done
+}
+
+# 安全替换软件包（失败自动回滚）
+safe_update_package() {
+	local package_name=$1
+	local package_repo=$2
+	local package_branch=$3
+	local path_default
+	local path_default_bak
+
+	# 支持完整 URL 或 GitHub shorthand
+	if [[ "$package_repo" =~ ^https?:// ]]; then
+		local clone_url="$package_repo"
+	else
+		local clone_url="https://github.com/$package_repo.git"
+	fi
+
+	path_default=$(find ./ ../feeds/luci/ ../feeds/packages/ -maxdepth 3 -type d -iname "${package_name}" -prune)
+	path_default_bak="${path_default}_bak"
+	[ -d "${path_default_bak}" ] && rm -rf "${path_default_bak}"
+
+	[ -d "${path_default}" ] && mv -f "${path_default}" "${path_default_bak}" && \
+		echo "【Lin】备份${package_name}：${path_default} -> ${path_default_bak}"
+
+	git clone --depth=1 --single-branch -b "${package_branch}" "${clone_url}" "${path_default}"
+	if [ -d "${path_default}" ]; then
+		echo "【Lin】替换${package_name}成功：${path_default}"
+		[ -d "${path_default_bak}" ] && rm -rf "${path_default_bak}"
+	else
+		mv -f "${path_default_bak}" "${path_default}"
+		echo "【Lin】替换${package_name}失败，还原${package_name}"
+	fi
+}
+
 # 调用示例
 # UPDATE_PACKAGE "OpenAppFilter" "destan19/OpenAppFilter" "master" "" "custom_name1 custom_name2"
 # UPDATE_PACKAGE "open-app-filter" "destan19/OpenAppFilter" "master" "" "luci-app-appfilter oaf" 这样会把原有的open-app-filter，luci-app-appfilter，oaf相关组件删除，不会出现coremark错误。
@@ -149,7 +200,10 @@ UPDATE_PACKAGE "luci-app-wechatpush" "tty228/luci-app-wechatpush" "master"
 fix_wechatpush
 
 UPDATE_PACKAGE "luci-app-socat" "Lienol/openwrt-package" "main"
+UPDATE_PACKAGE "luci-app-sqm" "https://git.cooluc.com/sbwml/luci-app-sqm" "main"
+safe_update_package "frp" "https://github.com/jw10126121/openwrt_frp" "v0.69.0"
 UPDATE_PACKAGE_LIST "luci-app-frpc luci-app-frps" "superzjg/luci-app-frpc_frps" "main"
+ensure_luci_app_frp_init_permissions
 
 UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 
