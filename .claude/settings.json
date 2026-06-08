@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/shapp/Documents/Git/Linjw/LjwOpenWrt/.github/workflows/**)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Read(//Users/shapp/Documents/Git/Linjw/LjwOpenWrt/Scripts/**)",
+      "Read(//Users/shapp/Documents/Git/Linjw/LjwOpenWrt/**)",
+      "Bash(git push *)",
+      "Bash(gh auth *)",
+      "Bash(git remote *)",
+      "Bash(ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null && git push)",
+      "Bash(brew install *)"
+    ],
+    "additionalDirectories": [
+      "/Users/shapp/.ssh"
+    ]
+  }
+}

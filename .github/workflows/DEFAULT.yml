@@ -71,7 +71,7 @@ jobs:
     secrets: inherit
     with:
       WRT_CONFIG: ${{inputs.DEVICE}}
-      WRT_THEME: aurora
+      WRT_THEME: argon
       WRT_NAME: Linjw
       WRT_SSID: LEDE
       WRT_WORD: none

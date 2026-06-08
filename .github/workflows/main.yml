@@ -110,12 +110,11 @@ jobs:
           echo "START_TIME=$(date +"D%y%m%d_T%H%M%S")" >> $GITHUB_ENV
           echo "WRT_MARK=${GITHUB_REPOSITORY%%/*}" >> $GITHUB_ENV
           echo "WRT_INFO=${WRT_SOURCE%%/*}" >> $GITHUB_ENV
-          echo "WRT_TARGET=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' ./Config/$WRT_CONFIG.txt)" >> $GITHUB_ENV
           echo "WRT_WIFI=wifi-yes" >> $GITHUB_ENV
           echo "WRT_KVER=none" >> $GITHUB_ENV
           echo "WRT_LIST=none" >> $GITHUB_ENV
 
-          # 缓存相关变量
+          # 缓存相关变量（不依赖 Config 文件）
           WRT_CONFIG_LABEL="${WRT_CONFIG}-${WRT_FIREWALL^^}"
           echo "WRT_CONFIG_LABEL=$WRT_CONFIG_LABEL" >> $GITHUB_ENV
 
@@ -150,8 +149,9 @@ jobs:
 
           cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
-          # 缓存相关：提取 DEVICE_SUBTARGET 和 WRT_VER
-          WRT_TARGET_FULL=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' ./Config/$WRT_CONFIG.txt)
+          # 缓存相关：从 Config 提取 DEVICE_SUBTARGET 和 WRT_VER
+          WRT_TARGET_FULL=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' $GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt)
+          echo "WRT_TARGET=$WRT_TARGET_FULL" >> $GITHUB_ENV
           DEVICE_SUBTARGET="${WRT_TARGET_FULL#*_}"
           echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
 
