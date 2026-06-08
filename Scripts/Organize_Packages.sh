@@ -58,9 +58,12 @@ UPDATE_PACKAGE_LIST() {
 	PACKAGE_DIRNAME="$ACTION_DIR/$PACKAGE_NAME"
 	mkdir -p "$PACKAGE_DIRNAME"
 	# 将同一功能需要的 ipk/apk 聚合到一个目录，便于上传与安装。
+	# ipk 用 _ 做版本分隔符，apk 用 -，用 [-_] 兼容两种命名。
 	for pkg in $PACKAGE_PRE_LIST; do
+	    local find_name
+	    find_name=$(echo "$pkg" | sed 's/_$//')
 	    for ext in ipk apk; do
-	    	find "$ACTION_DIR" -name "${pkg}*.${ext}" 2>/dev/null -exec cp -r {} "$PACKAGE_DIRNAME" \;
+	    	find "$ACTION_DIR" -name "${find_name}[-_]*.${ext}" 2>/dev/null -exec cp -r {} "$PACKAGE_DIRNAME" \;
 	    done
 	done
 
@@ -73,8 +76,10 @@ DELETE_PACKAGE_LIST() {
 	local PACKAGE_PRE_LIST=$2
 
 	for pkg in $PACKAGE_PRE_LIST; do
+	    local find_name
+	    find_name=$(echo "$pkg" | sed 's/_$//')
 	    for ext in ipk apk; do
-	    	find "$ACTION_DIR" -maxdepth 1 -name "${pkg}*.$ext" 2>/dev/null -exec rm -rf {} \;
+	    	find "$ACTION_DIR" -maxdepth 1 -name "${find_name}[-_]*.$ext" 2>/dev/null -exec rm -rf {} \;
 	    done
 	done
 
@@ -88,8 +93,10 @@ ORGANIZE_USB_PACKAGES() {
 	local pkg_pattern ext
 
 	for pkg_pattern in 'kmod-usb-*' 'kmod-usb2_*' 'kmod-usb3_*' 'usbutils_*'; do
+		local find_name
+		find_name=$(echo "$pkg_pattern" | sed 's/_$//')
 		for ext in ipk apk; do
-			if find "$ACTION_DIR" -maxdepth 1 -name "${pkg_pattern}*.${ext}" | grep -q .; then
+			if find "$ACTION_DIR" -maxdepth 1 -name "${find_name}[-_]*.${ext}" | grep -q .; then
 				found_any=true
 				break
 			fi
@@ -101,8 +108,10 @@ ORGANIZE_USB_PACKAGES() {
 	echo "【Lin】操作目录：${ACTION_DIR}，整理usb的安装包"
 	mkdir -p "$USB_DIRNAME"
 	for pkg_pattern in 'kmod-usb-*' 'kmod-usb2_*' 'kmod-usb3_*' 'usbutils_*'; do
+		local find_name
+		find_name=$(echo "$pkg_pattern" | sed 's/_$//')
 		for ext in ipk apk; do
-			find "$ACTION_DIR" -maxdepth 1 -name "${pkg_pattern}*.${ext}" 2>/dev/null -exec mv -f {} "$USB_DIRNAME" \;
+			find "$ACTION_DIR" -maxdepth 1 -name "${find_name}[-_]*.${ext}" 2>/dev/null -exec mv -f {} "$USB_DIRNAME" \;
 		done
 	done
 }
