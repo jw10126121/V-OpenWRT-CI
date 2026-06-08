@@ -45,8 +45,7 @@ jobs:
     strategy:
       fail-fast: false
 
-    #调用公用编译核心WRT-CORE.yml
-    uses: ./.github/workflows/WRT-CORE.yml
+    uses: ./.github/workflows/main.yml
     secrets: inherit
     with:
       WRT_CONFIG: JD-AX6600-WIFI
