@@ -3,6 +3,7 @@
 
 #CI项目
 name: DEFAULT
+run-name: ${{ inputs.DEVICE }}-${{ inputs.FIREWALL }}-${{ inputs.PACKAGE_MANAGER }}
 
 #CI计划
 on:
