@@ -371,7 +371,16 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
-          path: ./wrt/upload
+          path: |
+            ./wrt/upload/*
+            !./wrt/upload/Packages_*.tar.gz
+
+      - name: Upload Packages To Artifact
+        if: env.UPLOAD_TYPE == 'artifact' && env.COMPILE_STATUS == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Packages-${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
+          path: ./wrt/upload/Packages_*.tar.gz
 
       - name: Cleanup Workspace Before Cache Save
         if: always()

@@ -37,6 +37,15 @@ if [ -n "$manifest" ]; then
     echo "WRT_LIST=$(grep -oP '^luci-(app|theme)[^ ]*' "$manifest" | tr '\n' ' ')" >> "$GITHUB_ENV"
 fi
 
+# 生成编译说明文件（readme）
+readme_script="${GITHUB_WORKSPACE}/Scripts/readme.sh"
+if [ -f "${readme_script}" ]; then
+    chmod +x "${readme_script}"
+    # 普通文本版（供 artifact / 本地查看）
+    bash "${readme_script}" -c "./.config" -o "./upload/readme.txt" -r 'false'
+    echo "【Lin】readme 已生成"
+fi
+
 # 清理不需要上传的文件（保留 manifest）
 find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +
 find ./bin/targets/ -iregex ".*\(initramfs-uImage\).*" -exec rm -rf {} +
