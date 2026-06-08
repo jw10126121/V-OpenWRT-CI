@@ -39,6 +39,8 @@ fi
 
 # 清理不需要上传的文件（保留 manifest）
 find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +
+find ./bin/targets/ -iregex ".*\(initramfs-uImage\).*" -exec rm -rf {} +
+find ./bin/targets/ -iregex ".*\(-imagebuilder-\).*" -exec rm -rf {} +
 
 # 整理安装包：收集 ipk/apk 并压缩
 tmp_dir="$(mktemp -d)"
