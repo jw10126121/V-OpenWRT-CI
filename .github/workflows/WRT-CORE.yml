@@ -43,6 +43,21 @@ on:
       WRT_TEST:
         required: false
         type: string
+      WRTPackageManager:
+        description: '包管理器类型：ipk 或 apk'
+        required: false
+        type: string
+        default: 'ipk'
+      DINGDING_TOKEN:
+        description: '钉钉机器人Token（可选）'
+        required: false
+        type: string
+        default: ''
+      UPLOAD_TYPE:
+        description: '固件上传方式：release 或 artifact'
+        required: false
+        type: string
+        default: 'release'
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -58,6 +73,9 @@ env:
   WRT_SOURCE: ${{inputs.WRT_SOURCE}}
   WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
   WRT_TEST: ${{inputs.WRT_TEST}}
+  WRTPackageManager: ${{inputs.WRTPackageManager}}
+  DINGDING_TOKEN: ${{inputs.DINGDING_TOKEN}}
+  UPLOAD_TYPE: ${{inputs.UPLOAD_TYPE}}
 
 jobs:
   core:
@@ -184,11 +202,19 @@ jobs:
           make download -j$(nproc)
 
       - name: Compile Firmware
+        id: compile
+        continue-on-error: true
         if: env.WRT_TEST != 'true'
         run: |
           cd ./wrt/
 
           make -j$(nproc) || make -j1 V=s
+
+      - name: Finalize Status
+        if: always()
+        run: |
+          echo "COMPILE_STATUS=${{ steps.compile.outcome || 'skipped' }}" >> $GITHUB_ENV
+          echo "END_TIME=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
 
       - name: Machine Information
         run: |
@@ -203,6 +229,7 @@ jobs:
           echo "======================="
 
       - name: Package Firmware
+        if: steps.compile.outcome == 'success' || env.WRT_TEST == 'true'
         run: |
           cd ./wrt/ && mkdir ./upload/
 
@@ -227,29 +254,72 @@ jobs:
           fi
 
       - name: Release Firmware
-        uses: softprops/action-gh-release@master
+        if: env.UPLOAD_TYPE == 'release' && env.COMPILE_STATUS == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          release_tag="${WRT_CONFIG}-${WRT_INFO}-${WRT_BRANCH}-${WRT_DATE}"
+          release_files=(./wrt/upload/*.*)
+
+          if [ ${#release_files[@]} -eq 0 ]; then
+            echo "错误：未找到可上传的固件文件"
+            exit 1
+          fi
+
+          release_body=$(cat <<'BODY'
+          这是个平台固件包，内含多个设备！
+          请注意选择你需要的设备固件！
+          不要问，刷就完事了！
+
+          全系带开源硬件加速，别问了！
+
+          源码：${{env.WRT_REPO}}
+          分支：${{env.WRT_BRANCH}}
+          提交：${{env.WRT_HASH}}
+
+          配置：${{env.WRT_CONFIG}}
+          平台：${{env.WRT_TARGET}}
+
+          登录地址：${{env.WRT_IP}}
+          登录密码：${{env.WRT_PW}}
+
+          WIFI名称：${{env.WRT_SSID}}
+          WIFI密码：${{env.WRT_WORD}}
+
+          内核版本：${{env.WRT_KVER}}
+          插件列表：${{env.WRT_LIST}}
+          BODY
+          )
+
+          if gh release view "${release_tag}" >/dev/null 2>&1; then
+            echo "更新已有 Release：${release_tag}"
+            gh release edit "${release_tag}" --title "${release_tag}" --notes "${release_body}"
+            gh release upload "${release_tag}" "${release_files[@]}" --clobber
+          else
+            echo "创建新的 Release：${release_tag}"
+            gh release create "${release_tag}" "${release_files[@]}" --title "${release_tag}" --notes "${release_body}"
+          fi
+
+      - name: Upload Firmware To Artifact
+        if: env.UPLOAD_TYPE == 'artifact' && env.COMPILE_STATUS == 'success'
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
-          files: ./wrt/upload/*.*
-          body: |
-            这是个平台固件包，内含多个设备！
-            请注意选择你需要的设备固件！
-            不要问，刷就完事了！
+          name: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
+          path: ./wrt/upload
 
-            全系带开源硬件加速，别问了！
+      - name: Generate Notification
+        if: always()
+        run: |
+          $GITHUB_WORKSPACE/Scripts/ci_create_notifications.sh
 
-            源码：${{env.WRT_REPO}}
-            分支：${{env.WRT_BRANCH}}
-            提交：${{env.WRT_HASH}}
-
-            配置：${{env.WRT_CONFIG}}
-            平台：${{env.WRT_TARGET}}
-
-            登录地址：${{env.WRT_IP}}
-            登录密码：${{env.WRT_PW}}
-
-            WIFI名称：${{env.WRT_SSID}}
-            WIFI密码：${{env.WRT_WORD}}
-
-            内核版本：${{env.WRT_KVER}}
-            插件列表：${{env.WRT_LIST}}
+      - name: Send DingTalk Notification
+        if: always() && env.DINGDING_TOKEN != ''
+        env:
+          DINGDING_MESSAGE: |
+            ${{ env.notify_content }}
+        run: |
+          payload=$(python3 -c 'import json, os; print(json.dumps({"msgtype":"text","text":{"content": os.environ["DINGDING_MESSAGE"]}}, ensure_ascii=False))')
+          curl --fail --silent --show-error \
+            -H 'Content-Type: application/json' \
+            -d "$payload" \
+            "https://oapi.dingtalk.com/robot/send?access_token=${DINGDING_TOKEN}"

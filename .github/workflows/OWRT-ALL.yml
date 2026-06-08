@@ -6,11 +6,6 @@ name: OWRT-ALL
 
 #CI计划
 on:
-  #自动编译：当Auto-Clean运行完成后
-  workflow_run:
-    workflows: ["Auto-Clean"]
-    types:
-      - completed
   #手动编译
   workflow_dispatch:
     inputs:
@@ -23,6 +18,14 @@ on:
         default: 'false'
         required: false
         type: boolean
+      PACKAGE_MANAGER:
+        description: '包管理器类型'
+        required: true
+        default: 'ipk'
+        type: choice
+        options:
+          - ipk
+          - apk
 
 #CI权限
 permissions: write-all
@@ -66,3 +69,5 @@ jobs:
       WRT_PACKAGE: ${{inputs.PACKAGE}}
       #仅输出配置文件
       WRT_TEST: ${{inputs.TEST}}
+      #包管理器类型
+      WRTPackageManager: ${{inputs.PACKAGE_MANAGER}}

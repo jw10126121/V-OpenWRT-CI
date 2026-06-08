@@ -16,17 +16,22 @@ WIFI_UC="./package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc"
 if [ -f "$WIFI_SH" ]; then
 	#修改WIFI名称
 	sed -i "s/BASE_SSID='.*'/BASE_SSID='$WRT_SSID'/g" $WIFI_SH
-	#修改WIFI密码
-	sed -i "s/BASE_WORD='.*'/BASE_WORD='$WRT_WORD'/g" $WIFI_SH
+	#修改WIFI密码（为空或none时删除密码行，保持开放WiFi）
+	if [[ -n "$WRT_WORD" && "$WRT_WORD" != "none" ]]; then
+		sed -i "s/BASE_WORD='.*'/BASE_WORD='$WRT_WORD'/g" $WIFI_SH
+	else
+		sed -i "/BASE_WORD=/d" $WIFI_SH
+	fi
 elif [ -f "$WIFI_UC" ]; then
 	#修改WIFI名称
 	sed -i "s/ssid='.*'/ssid='$WRT_SSID'/g" $WIFI_UC
-	#修改WIFI密码
-	sed -i "s/key='.*'/key='$WRT_WORD'/g" $WIFI_UC
 	#修改WIFI地区
 	sed -i "s/country='.*'/country='CN'/g" $WIFI_UC
-	#修改WIFI加密
-	sed -i "s/encryption='.*'/encryption='psk2+ccmp'/g" $WIFI_UC
+	#修改WIFI密码和加密（为空或none时保持上游默认的开放WiFi）
+	if [[ -n "$WRT_WORD" && "$WRT_WORD" != "none" ]]; then
+		sed -i "s/key='.*'/key='$WRT_WORD'/g" $WIFI_UC
+		sed -i "s/encryption='.*'/encryption='psk2+ccmp'/g" $WIFI_UC
+	fi
 fi
 
 CFG_FILE="./package/base-files/files/bin/config_generate"
@@ -40,6 +45,15 @@ echo "CONFIG_PACKAGE_luci=y" >> ./.config
 echo "CONFIG_LUCI_LANG_zh_Hans=y" >> ./.config
 echo "CONFIG_PACKAGE_luci-theme-$WRT_THEME=y" >> ./.config
 echo "CONFIG_PACKAGE_luci-app-$WRT_THEME-config=y" >> ./.config
+
+#包管理器选择 (apk/ipk)
+if [[ "${WRTPackageManager,,}" == "apk" ]]; then
+    echo "CONFIG_PACKAGE_luci-apk=y" >> ./.config
+    echo "Package manager: APK"
+else
+    echo "CONFIG_PACKAGE_luci-apk=n" >> ./.config
+    echo "Package manager: IPK"
+fi
 
 #引入私有扩展配置
 if [ -f "$GITHUB_WORKSPACE/Config/PRIVATE.txt" ]; then
