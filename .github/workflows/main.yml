@@ -187,10 +187,10 @@ jobs:
         if: env.WRT_TEST != 'true'
         uses: actions/cache/restore@v5
         with:
-          key: toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-${{ env.WRT_CONFIG_LABEL }}
+          key: toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}
           restore-keys: |
             toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-
-            toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}
+            toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-
           path: |
             ./wrt/staging_dir/host*
             ./wrt/staging_dir/tool*
@@ -425,7 +425,7 @@ jobs:
         if: always() && env.WRT_TEST != 'true' && steps.restore_toolchain_cache.outputs.cache-hit != 'true' && steps.evaluate_cache_save_inputs.outputs.toolchain_present == 'true'
         uses: actions/cache/save@v5
         with:
-          key: toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-${{ env.WRT_CONFIG_LABEL }}
+          key: toolchain-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}
           path: |
             ./wrt/staging_dir/host*
             ./wrt/staging_dir/tool*
