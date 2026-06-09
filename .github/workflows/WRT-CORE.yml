@@ -120,7 +120,8 @@ jobs:
           echo "【Lin】缓存子目标：$DEVICE_SUBTARGET"
 
           # 提取设备名列表（用于固件命名）
-          DEVICE_NAME_LIST=$(grep -oP '^CONFIG_TARGET_[^_]+_[^_]+_DEVICE_\K[^=]+(?=\=y)' ./Config/$WRT_CONFIG.txt | tr '\n' ' ')
+          # 匹配两种格式：CONFIG_TARGET_DEVICE_xxx_yyy_DEVICE_zzz=y 和 CONFIG_TARGET_xxx_yyy_DEVICE_zzz=y
+          DEVICE_NAME_LIST=$(grep -oP '^(CONFIG_TARGET_DEVICE_|CONFIG_TARGET_)[^_]+_[^_]+_DEVICE_\K[^=]+(?=\=y)' ./Config/$WRT_CONFIG.txt | tr '\n' ' ')
           DEVICE_NAME_LIST_LIAN=$(echo "$DEVICE_NAME_LIST" | tr ' ' '\n' | grep -v '^$' | paste -sd '_and_' -)
           echo "DEVICE_NAME_LIST=$DEVICE_NAME_LIST" >> $GITHUB_ENV
           echo "DEVICE_NAME_LIST_LIAN=$DEVICE_NAME_LIST_LIAN" >> $GITHUB_ENV
