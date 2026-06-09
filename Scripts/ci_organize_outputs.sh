@@ -4,7 +4,7 @@
 # 2. 输出目录 ./upload/ 供 artifact / release 上传使用。
 # 3. 命名格式：subtarget_设备名_FW_包管理器_功能_版本_时间
 
-set -euo pipefail
+set -uo pipefail
 
 # 由 workflow 注入的环境变量
 : "${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}"

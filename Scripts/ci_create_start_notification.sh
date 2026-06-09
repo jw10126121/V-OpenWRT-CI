@@ -3,7 +3,7 @@
 # 1. 在 GitHub Actions 中生成编译开始阶段的多行通知内容。
 # 2. 优先使用预生成的 readme 文件，回退到动态生成。
 
-set -euo pipefail
+set -uo pipefail
 
 : "${GITHUB_ENV:?GITHUB_ENV is required}"
 : "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"

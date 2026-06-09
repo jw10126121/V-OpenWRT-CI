@@ -4,7 +4,7 @@
 # 2. 同时写入 GITHUB_ENV 与 GITHUB_OUTPUT，供后续步骤或 Action 输出复用。
 # 3. 优先使用 ci_organize_outputs.sh 预生成的 readme 文件。
 
-set -euo pipefail
+set -uo pipefail
 
 : "${GITHUB_ENV:?GITHUB_ENV is required}"
 : "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"

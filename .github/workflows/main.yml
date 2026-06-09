@@ -88,6 +88,7 @@ jobs:
       - name: Initialization Environment
         env:
           DEBIAN_FRONTEND: noninteractive
+          TERM: xterm
         run: |
           sudo -E apt -yqq purge firefox
           sudo -E apt -yqq update
@@ -268,6 +269,7 @@ jobs:
           # 保存用户原始配置（make defconfig 之前）
           cp -f ./.config ./my_config.txt
 
+          export TERM=xterm
           make defconfig -j$(nproc)
 
           # 生成 seed.config（记录用户自定义配置与默认配置的差异）
