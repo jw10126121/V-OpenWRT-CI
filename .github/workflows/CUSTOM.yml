@@ -46,7 +46,7 @@ permissions: write-all
 
 #CI任务
 jobs:
-  # GL-MT6000-WIFI (MTK Filogic 830)
+  # GL-MT6000-WIFI (MTK Filogic 830) - 使用 owrt 分支
   gl_mt6000_wifi:
     name: GL-MT6000-WIFI-${{ inputs.FIREWALL || 'fw4' }}
     uses: ./.github/workflows/main.yml
@@ -60,7 +60,7 @@ jobs:
       WRT_IP: 192.168.0.1
       WRT_PW: ' '
       WRT_REPO: https://github.com/VIKINGYFY/immortalwrt.git
-      WRT_BRANCH: main
+      WRT_BRANCH: owrt
       WRT_SOURCE: VIKINGYFY/immortalwrt
       WRT_PACKAGE: ''
       WRT_TEST: 'false'
@@ -68,7 +68,7 @@ jobs:
       UPLOAD_TYPE: ${{ inputs.UPLOAD_TYPE || 'release' }}
       WRT_FIREWALL: ${{ inputs.FIREWALL || 'fw4' }}
 
-  # JD-AX6600-WIFI (Qualcomm IPQ60xx)
+  # JD-AX6600-WIFI (Qualcomm IPQ60xx) - 使用 main 分支
   jd_ax6600_wifi:
     name: JD-AX6600-WIFI-${{ inputs.FIREWALL || 'fw4' }}
     uses: ./.github/workflows/main.yml
@@ -90,7 +90,7 @@ jobs:
       UPLOAD_TYPE: ${{ inputs.UPLOAD_TYPE || 'release' }}
       WRT_FIREWALL: ${{ inputs.FIREWALL || 'fw4' }}
 
-  # CMIOT-AX18-NOWIFI (Qualcomm IPQ60xx, 无WIFI)
+  # CMIOT-AX18-NOWIFI (Qualcomm IPQ60xx, 无WIFI) - 使用 main 分支
   cmiot_ax18_nowifi:
     name: CMIOT-AX18-NOWIFI-${{ inputs.FIREWALL || 'fw4' }}
     uses: ./.github/workflows/main.yml
