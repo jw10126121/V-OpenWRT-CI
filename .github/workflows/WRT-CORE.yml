@@ -313,6 +313,22 @@ jobs:
           chmod +x $GITHUB_WORKSPACE/Scripts/ci_organize_outputs.sh
           bash $GITHUB_WORKSPACE/Scripts/ci_organize_outputs.sh
 
+      - name: Upload Firmware To Artifact
+        if: env.COMPILE_STATUS == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
+          path: |
+            ./wrt/upload/*
+            !./wrt/upload/Packages_*.tar.gz
+
+      - name: Upload Packages To Artifact
+        if: env.COMPILE_STATUS == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Packages-${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
+          path: ./wrt/upload/Packages_*.tar.gz
+
       - name: Generate Release Description
         if: env.UPLOAD_TYPE == 'release' && env.COMPILE_STATUS == 'success'
         working-directory: ./wrt
@@ -364,22 +380,6 @@ jobs:
           fi
 
           echo "【Lin】Release 已发布：${release_tag}"
-
-      - name: Upload Firmware To Artifact
-        if: env.UPLOAD_TYPE == 'artifact' && env.COMPILE_STATUS == 'success'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
-          path: |
-            ./wrt/upload/*
-            !./wrt/upload/Packages_*.tar.gz
-
-      - name: Upload Packages To Artifact
-        if: env.UPLOAD_TYPE == 'artifact' && env.COMPILE_STATUS == 'success'
-        uses: actions/upload-artifact@v4
-        with:
-          name: Packages-${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
-          path: ./wrt/upload/Packages_*.tar.gz
 
       - name: Generate Notification
         if: always()
