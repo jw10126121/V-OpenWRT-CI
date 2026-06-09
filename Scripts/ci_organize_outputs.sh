@@ -2,7 +2,7 @@
 # 说明：
 # 1. 在 CI 末尾整理编译产物：配置文件、插件列表、固件镜像、安装包压缩包。
 # 2. 输出目录 ./upload/ 供 artifact / release 上传使用。
-# 3. 命名格式与 LjwOpenWrt 一致：subtarget_设备名_FW_FRP_版本_时间
+# 3. 命名格式：subtarget_设备名_FW_包管理器_功能_版本_时间
 
 set -euo pipefail
 
@@ -16,9 +16,10 @@ set -euo pipefail
 : "${WRT_WIFI:?WRT_WIFI is required}"
 : "${DEVICE_SUBTARGET:?DEVICE_SUBTARGET is required}"
 : "${DEVICE_NAME_LIST_LIAN:?DEVICE_NAME_LIST_LIAN is required}"
+: "${WRTPackageManager:?WRTPackageManager is required}"
 
-# 构建统一命名前缀（与 LjwOpenWrt 一致）
-# 格式：subtarget_设备名_FW版本_FRP角色_源码版本_编译时间
+# 构建统一命名前缀
+# 格式：subtarget_设备名_FW版本_包管理器_FRP角色_源码版本_编译时间
 # 检测 FRP 角色
 FRP_TAG="none"
 if grep -q "^CONFIG_PACKAGE_luci-app-frpc=y" ./.config 2>/dev/null; then
@@ -31,7 +32,9 @@ elif grep -q "^CONFIG_PACKAGE_luci-app-frps=y" ./.config 2>/dev/null; then
     FRP_TAG="FRPS"
 fi
 
+# 构建 BUILD_VARIANT_TAG：防火墙版本_包管理器_FRP功能
 BUILD_VARIANT_TAG="${WRT_FIREWALL^^}"
+BUILD_VARIANT_TAG="${BUILD_VARIANT_TAG}_${WRTPackageManager}"
 [ "$FRP_TAG" != "none" ] && BUILD_VARIANT_TAG="${BUILD_VARIANT_TAG}_${FRP_TAG}"
 
 WRT_REPO_NAME=$(basename "${WRT_REPO:-unknown}" .git 2>/dev/null || echo "unknown")
