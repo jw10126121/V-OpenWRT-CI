@@ -85,12 +85,16 @@ echo "${SYSTEM_DESC}" > "${SYSTEM_DESC_FILE}"
 
 # 生成编译说明文件（readme）
 readme_script="${GITHUB_WORKSPACE}/Scripts/readme.sh"
+readme_desc_file="./upload/readme_${output_name_prefix}.txt"
 if [ -f "${readme_script}" ]; then
     chmod +x "${readme_script}"
-    bash "${readme_script}" -c "./.config" -o "./upload/readme_${output_name_prefix}.txt" -s "$(cat "${SYSTEM_DESC_FILE}")" -r 'false'
+    bash "${readme_script}" -c "./.config" -o "${readme_desc_file}" -s "$(cat "${SYSTEM_DESC_FILE}")" -r 'false'
     echo "【Lin】readme 已生成"
 fi
 rm -f "${SYSTEM_DESC_FILE}"
+
+# 导出 readme 路径供通知脚本使用
+echo "readme_desc_file=$(cd "$(dirname "${readme_desc_file}")" && pwd)/$(basename "${readme_desc_file}")" >> "${GITHUB_ENV}"
 
 # 清理不需要上传的文件（保留 manifest）
 find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +

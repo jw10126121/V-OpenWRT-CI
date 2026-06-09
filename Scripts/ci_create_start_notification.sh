@@ -1,65 +1,79 @@
 #!/bin/bash
 # 说明：
 # 1. 在 GitHub Actions 中生成编译开始阶段的多行通知内容。
-# 2. 基于当前 .config 动态生成一份带插件列表的说明。
+# 2. 优先使用预生成的 readme 文件，回退到动态生成。
 
 set -euo pipefail
 
 : "${GITHUB_ENV:?GITHUB_ENV is required}"
 : "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"
 
-# 查找 .config 文件
-find_config_file() {
+# 从 .config 提取设备架构
+get_device_arch() {
     local config_file="${1:-.config}"
-    if [ ! -f "$config_file" ]; then
-        for candidate in "./.config" "${WRT_DIR:-./wrt}/.config"; do
-            if [ -f "$candidate" ]; then
-                echo "$candidate"
-                return 0
-            fi
-        done
-        return 1
+    local arch=""
+    if grep -q "CONFIG_TARGET_armvirt" "${config_file}" 2>/dev/null; then
+        arch="aarch64_cortex-a53"
+    elif grep -q "CONFIG_TARGET_mediatek" "${config_file}" 2>/dev/null; then
+        arch="aarch64_cortex-a53"
+    elif grep -q "CONFIG_TARGET_qualcommax" "${config_file}" 2>/dev/null; then
+        arch="aarch64_cortex-a53"
+    elif grep -q "CONFIG_TARGET_ramips" "${config_file}" 2>/dev/null; then
+        arch="mipsel_24kc"
+    elif grep -q "CONFIG_TARGET_x86" "${config_file}" 2>/dev/null; then
+        arch="x86_64"
+    elif grep -q "CONFIG_TARGET_rockchip" "${config_file}" 2>/dev/null; then
+        arch="aarch64_cortex-a53"
     fi
-    echo "$config_file"
+    echo "${arch}"
 }
 
-config_file="$(find_config_file)" || {
-    echo "警告：未找到 .config 文件，跳过开始通知生成"
-    exit 0
-}
+# 查找 .config 文件
+config_file="$(find ./ -maxdepth 2 -name ".config" -type f 2>/dev/null | head -1)"
+[ -z "${config_file}" ] && config_file="./.config"
 
-# 构建固件说明
-system_desc=""
-{
-    echo "【${WRT_INFO:-VIKINGYFY}】编译开始"
-    echo "固件类型：[常规版]"
-    echo "支持平台：${WRT_TARGET:-unknown}"
-    echo "源码来源：${WRT_SOURCE:-unknown}"
-    echo "源码分支：${WRT_BRANCH:-main}"
-    echo "默认地址：${WRT_IP:-192.168.10.1}"
-    echo "默认密码：${WRT_PW:-无}"
-    echo "WIFI名称：${WRT_SSID:-OpenWrt}"
-    echo "WIFI密码：${WRT_WORD:-none}"
-} | while IFS= read -r line; do
-    system_desc="${system_desc}${line}"$'\n'
-done
+# 构建固件信息摘要
+DEVICE_ARCH="$(get_device_arch "${config_file}")"
+WRT_REPO_NAME=$(basename "${WRT_REPO:-unknown}" .git 2>/dev/null || echo "unknown")
 
-# 调用 readme.sh 生成带版本号的插件/主题列表
-readme_script="${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}/Scripts/readme.sh"
-tmp_desc_file="$(mktemp "${TMPDIR:-/tmp}/start-notify.XXXXXX.txt")"
+system_info="【${WRT_INFO:-unknown}】编译开始
+支持设备：${DEVICE_NAME_LIST:-unknown}
+固件类型：[${WRT_FIREWALL:-fw4}]
+支持平台：${WRT_TARGET:-unknown}
+源码风味：${WRT_REPO_NAME}
+FW环境：${WRT_FIREWALL:-fw4}
+设备架构：${DEVICE_ARCH}
+包管理器：${WRTPackageManager:-ipk}
+默认地址：${WRT_IP:-192.168.0.1}
+默认密码：${WRT_PW:-无}
+是否wifi：$(echo "${WRT_WIFI:-}" | grep -q "yes" && echo "有WIFI" || echo "无WIFI")
+源码地址：${WRT_REPO:-unknown}
+源码分支：${WRT_BRANCH:-main}"
 
-bash "${readme_script}" \
-    -c "${config_file}" \
-    -o "${tmp_desc_file}" \
-    -s "${system_desc}" \
-    -r 'false'
+# 优先使用预生成的 readme 文件
+get_start_notify_body() {
+    if [ -n "${readme_desc_file:-}" ] && [ -f "${readme_desc_file}" ]; then
+        cat "${readme_desc_file}"
+        return 0
+    fi
 
-# 读取 readme.sh 生成的内容
-readme_body=""
-if [ -f "${tmp_desc_file}" ]; then
-    readme_body="$(cat "${tmp_desc_file}")"
+    # 回退：直接调用 readme.sh
+    local cfg="${config_file}"
+    [ -z "${cfg}" ] || [ ! -f "${cfg}" ] && return 1
+
+    local readme_script="${GITHUB_WORKSPACE}/Scripts/readme.sh"
+    [ -f "${readme_script}" ] || return 1
+
+    local tmp_desc_file
+    tmp_desc_file="$(mktemp)"
+    bash "${readme_script}" -c "${cfg}" -o "${tmp_desc_file}" -s "${system_info}" -r 'false'
+    if [ -f "${tmp_desc_file}" ] && [ -s "${tmp_desc_file}" ]; then
+        cat "${tmp_desc_file}"
+    fi
     rm -f "${tmp_desc_file}"
-fi
+}
+
+start_notify_body="$(get_start_notify_body)"
 
 # 写入开始通知内容
 write_start_notify_content() {
@@ -67,8 +81,8 @@ write_start_notify_content() {
 
     {
         echo "start_notify_content<<EOF"
-        if [ -n "${readme_body}" ]; then
-            printf '%s\n' "${readme_body}"
+        if [ -n "${start_notify_body}" ]; then
+            printf '%s\n' "${start_notify_body}"
         fi
         echo "EOF"
     } >> "${target_file}"
