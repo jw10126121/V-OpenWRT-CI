@@ -78,7 +78,8 @@ jobs:
       WRT_IP: ${{inputs.DEFAULT_LANIP}}
       WRT_PW: ' '
       WRT_REPO: https://github.com/VIKINGYFY/immortalwrt.git
-      WRT_BRANCH: main
+      # GL-MT6000 使用 owrt 分支（MTK 平台），其他使用 main 分支（高通平台）
+      WRT_BRANCH: ${{ inputs.DEVICE == 'GL-MT6000-WIFI' && 'owrt' || 'main' }}
       WRT_SOURCE: VIKINGYFY/immortalwrt
       WRT_PACKAGE: ${{inputs.PACKAGE}}
       WRT_TEST: ${{inputs.TEST}}
