@@ -10,7 +10,13 @@ sed -i "s/luci-theme-bootstrap/luci-theme-$WRT_THEME/g" $(find ./feeds/luci/coll
 sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $(find ./feeds/luci/modules/luci-mod-system/ -type f -name "flash.js")
 #添加编译日期标识
 BUILD_ID="Linjw-$(TZ=UTC-8 date +"%y%m%d")"
-sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ ${BUILD_ID}')/g" $(find ./feeds/luci/modules/luci-mod-status/ -type f -name "10_system.js")
+TARGET_FILE=$(find ./feeds/luci/modules/luci-mod-status/ -type f -name "10_system.js" 2>/dev/null | head -1)
+if [ -n "$TARGET_FILE" ]; then
+    sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ ${BUILD_ID}')/g" "$TARGET_FILE"
+    echo "【Lin】版本标识已设置：${BUILD_ID} -> ${TARGET_FILE}"
+else
+    echo "【Lin】警告：未找到 10_system.js，版本标识未设置"
+fi
 
 WIFI_SH=$(find ./target/linux/{mediatek/filogic,qualcommax}/base-files/etc/uci-defaults/ -type f -name "*set-wireless.sh" 2>/dev/null)
 WIFI_UC="./package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc"
