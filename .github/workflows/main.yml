@@ -106,7 +106,7 @@ jobs:
 
       - name: Initialization Values
         run: |
-          echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
+          echo "WRT_DATE=$(date +"D%y%m%d_T%H%M%S")" >> $GITHUB_ENV
           echo "START_TIME=$(date +"D%y%m%d_T%H%M%S")" >> $GITHUB_ENV
           echo "START_DATE=$(date +"D%y%m%d")" >> $GITHUB_ENV
           echo "WRT_MARK=${GITHUB_REPOSITORY%%/*}" >> $GITHUB_ENV
@@ -342,7 +342,7 @@ jobs:
         if: env.COMPILE_STATUS == 'success'
         uses: actions/upload-artifact@v4
         with:
-          name: Packages-${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
+          name: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}-packages
           path: ./wrt/upload/Packages_*.tar.gz
 
       - name: Generate Release Description
