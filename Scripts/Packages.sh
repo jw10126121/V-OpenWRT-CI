@@ -191,7 +191,8 @@ UPDATE_PACKAGE "passwall2" "Openwrt-Passwall/openwrt-passwall2" "main" "pkg"
 
 UPDATE_PACKAGE "luci-app-onliner" "danchexiaoyang/luci-app-onliner" "main"
 UPDATE_PACKAGE "luci-app-easytier" "EasyTier/luci-app-easytier" "v2.6.4"
-UPDATE_PACKAGE_LIST "luci-app-vlmcsd vlmcsd" "sbwml/openwrt_pkgs" "main"
+# luci-app-vlmcsd：LEDE专用，IMM用自带的
+# UPDATE_PACKAGE_LIST "luci-app-vlmcsd vlmcsd" "sbwml/openwrt_pkgs" "main"
 
 UPDATE_PACKAGE "luci-app-pushbot" "zzsj0928/luci-app-pushbot" "master"
 fix_pushbot
@@ -201,6 +202,7 @@ fix_wechatpush
 
 UPDATE_PACKAGE "luci-app-socat" "Lienol/openwrt-package" "main"
 UPDATE_PACKAGE "luci-app-sqm" "https://git.cooluc.com/sbwml/luci-app-sqm" "main"
+
 safe_update_package "frp" "https://github.com/jw10126121/openwrt_frp" "v0.69.0"
 UPDATE_PACKAGE_LIST "luci-app-frpc luci-app-frps" "superzjg/luci-app-frpc_frps" "main"
 ensure_luci_app_frp_init_permissions
