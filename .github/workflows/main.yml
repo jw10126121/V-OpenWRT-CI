@@ -305,7 +305,7 @@ jobs:
         if: always()
         run: |
           echo "COMPILE_STATUS=${{ steps.compile.outcome || 'skipped' }}" >> $GITHUB_ENV
-          echo "END_TIME=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
+          echo "END_TIME=$(date +"D%y%m%d_T%H%M%S")" >> $GITHUB_ENV
 
       - name: Machine Information
         run: |
