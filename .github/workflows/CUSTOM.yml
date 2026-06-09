@@ -3,10 +3,12 @@
 
 #CI项目 - 自定义批量编译
 name: CUSTOM
-run-name: CUSTOM-${{ inputs.UPLOAD_TYPE }}
+run-name: CUSTOM-${{ github.event_name == 'schedule' && 'scheduled' || inputs.UPLOAD_TYPE }}
 
 #CI计划
 on:
+  schedule:
+    - cron: '0 0 15 * *'  # 每月15日 UTC 00:00 运行
   workflow_dispatch:
     inputs:
       WHAT_MY_SAY:
@@ -46,7 +48,7 @@ permissions: write-all
 jobs:
   # GL-MT6000-WIFI (MTK Filogic 830)
   gl_mt6000_wifi:
-    name: GL-MT6000-WIFI-${{ inputs.FIREWALL }}
+    name: GL-MT6000-WIFI-${{ inputs.FIREWALL || 'fw4' }}
     uses: ./.github/workflows/main.yml
     secrets: inherit
     with:
@@ -62,13 +64,13 @@ jobs:
       WRT_SOURCE: VIKINGYFY/immortalwrt
       WRT_PACKAGE: ''
       WRT_TEST: 'false'
-      WRTPackageManager: ${{ inputs.PACKAGE_MANAGER }}
-      UPLOAD_TYPE: ${{ inputs.UPLOAD_TYPE }}
-      WRT_FIREWALL: ${{ inputs.FIREWALL }}
+      WRTPackageManager: ${{ inputs.PACKAGE_MANAGER || 'apk' }}
+      UPLOAD_TYPE: ${{ inputs.UPLOAD_TYPE || 'release' }}
+      WRT_FIREWALL: ${{ inputs.FIREWALL || 'fw4' }}
 
   # JD-AX6600-WIFI (Qualcomm IPQ60xx)
   jd_ax6600_wifi:
-    name: JD-AX6600-WIFI-${{ inputs.FIREWALL }}
+    name: JD-AX6600-WIFI-${{ inputs.FIREWALL || 'fw4' }}
     uses: ./.github/workflows/main.yml
     secrets: inherit
     with:
@@ -84,13 +86,13 @@ jobs:
       WRT_SOURCE: VIKINGYFY/immortalwrt
       WRT_PACKAGE: ''
       WRT_TEST: 'false'
-      WRTPackageManager: ${{ inputs.PACKAGE_MANAGER }}
-      UPLOAD_TYPE: ${{ inputs.UPLOAD_TYPE }}
-      WRT_FIREWALL: ${{ inputs.FIREWALL }}
+      WRTPackageManager: ${{ inputs.PACKAGE_MANAGER || 'apk' }}
+      UPLOAD_TYPE: ${{ inputs.UPLOAD_TYPE || 'release' }}
+      WRT_FIREWALL: ${{ inputs.FIREWALL || 'fw4' }}
 
   # CMIOT-AX18-NOWIFI (Qualcomm IPQ60xx, 无WIFI)
   cmiot_ax18_nowifi:
-    name: CMIOT-AX18-NOWIFI-${{ inputs.FIREWALL }}
+    name: CMIOT-AX18-NOWIFI-${{ inputs.FIREWALL || 'fw4' }}
     uses: ./.github/workflows/main.yml
     secrets: inherit
     with:
@@ -106,6 +108,6 @@ jobs:
       WRT_SOURCE: VIKINGYFY/immortalwrt
       WRT_PACKAGE: ''
       WRT_TEST: 'false'
-      WRTPackageManager: ${{ inputs.PACKAGE_MANAGER }}
-      UPLOAD_TYPE: ${{ inputs.UPLOAD_TYPE }}
-      WRT_FIREWALL: ${{ inputs.FIREWALL }}
+      WRTPackageManager: ${{ inputs.PACKAGE_MANAGER || 'apk' }}
+      UPLOAD_TYPE: ${{ inputs.UPLOAD_TYPE || 'release' }}
+      WRT_FIREWALL: ${{ inputs.FIREWALL || 'fw4' }}
