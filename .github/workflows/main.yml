@@ -151,8 +151,8 @@ jobs:
           cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
           # 缓存相关：从 Config 提取 DEVICE_SUBTARGET 和 WRT_VER
-          # 提取 CONFIG_TARGET_xxx_yyy=y 格式中的第二部分（子目标），如 ipq60xx
-          DEVICE_SUBTARGET=$(grep -oP '^CONFIG_TARGET_[^_]+_\K[^_]+(?=\=y)' $GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt | head -1)
+          # 提取 CONFIG_TARGET_xxx_yyy=y 格式中的第二部分（子目标），如 ipq60xx、filogic
+          DEVICE_SUBTARGET=$(grep -oP '^CONFIG_TARGET_[^_]+_\K[^_=]+(?=\=y)' $GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt | head -1)
           echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
           echo "【Lin】缓存子目标：$DEVICE_SUBTARGET"
 
