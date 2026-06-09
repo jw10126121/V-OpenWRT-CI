@@ -198,7 +198,7 @@ jobs:
         if: env.WRT_TEST != 'true'
         uses: actions/cache/restore@v5
         with:
-          key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.START_TIME }}
+          key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}
           restore-keys: |
             ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-
           path: |
@@ -431,7 +431,7 @@ jobs:
         if: always() && env.WRT_TEST != 'true' && steps.evaluate_cache_save_inputs.outputs.ccache_present == 'true'
         uses: actions/cache/save@v5
         with:
-          key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.START_TIME }}
+          key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}
           path: |
             ./wrt/.ccache
 
