@@ -1,0 +1,111 @@
+# SPDX-License-Identifier: MIT
+# Copyright (C) 2026 VIKINGYFY
+
+#CI项目 - 自定义批量编译
+name: CUSTOM
+run-name: CUSTOM-${{ inputs.UPLOAD_TYPE }}
+
+#CI计划
+on:
+  workflow_dispatch:
+    inputs:
+      WHAT_MY_SAY:
+        description: '编译说明'
+        required: false
+        type: string
+        default: ''
+      PACKAGE_MANAGER:
+        description: '包管理器类型'
+        required: true
+        default: 'apk'
+        type: choice
+        options:
+          - ipk
+          - apk
+      UPLOAD_TYPE:
+        description: '固件上传方式'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - artifact
+      FIREWALL:
+        description: '防火墙版本'
+        required: true
+        default: 'fw4'
+        type: choice
+        options:
+          - fw3
+          - fw4
+
+#CI权限
+permissions: write-all
+
+#CI任务
+jobs:
+  # GL-MT6000-WIFI (MTK Filogic 830)
+  gl_mt6000_wifi:
+    name: GL-MT6000-WIFI-${{ inputs.FIREWALL }}
+    uses: ./.github/workflows/main.yml
+    secrets: inherit
+    with:
+      WRT_CONFIG: GL-MT6000-WIFI
+      WRT_THEME: argon
+      WRT_NAME: Linjw
+      WRT_SSID: LEDE
+      WRT_WORD: none
+      WRT_IP: 192.168.0.1
+      WRT_PW: ' '
+      WRT_REPO: https://github.com/VIKINGYFY/immortalwrt.git
+      WRT_BRANCH: main
+      WRT_SOURCE: VIKINGYFY/immortalwrt
+      WRT_PACKAGE: ''
+      WRT_TEST: 'false'
+      WRTPackageManager: ${{ inputs.PACKAGE_MANAGER }}
+      UPLOAD_TYPE: ${{ inputs.UPLOAD_TYPE }}
+      WRT_FIREWALL: ${{ inputs.FIREWALL }}
+
+  # JD-AX6600-WIFI (Qualcomm IPQ60xx)
+  jd_ax6600_wifi:
+    name: JD-AX6600-WIFI-${{ inputs.FIREWALL }}
+    uses: ./.github/workflows/main.yml
+    secrets: inherit
+    with:
+      WRT_CONFIG: JD-AX6600-WIFI
+      WRT_THEME: argon
+      WRT_NAME: Linjw
+      WRT_SSID: LEDE
+      WRT_WORD: none
+      WRT_IP: 192.168.0.1
+      WRT_PW: ' '
+      WRT_REPO: https://github.com/VIKINGYFY/immortalwrt.git
+      WRT_BRANCH: main
+      WRT_SOURCE: VIKINGYFY/immortalwrt
+      WRT_PACKAGE: ''
+      WRT_TEST: 'false'
+      WRTPackageManager: ${{ inputs.PACKAGE_MANAGER }}
+      UPLOAD_TYPE: ${{ inputs.UPLOAD_TYPE }}
+      WRT_FIREWALL: ${{ inputs.FIREWALL }}
+
+  # CMIOT-AX18-NOWIFI (Qualcomm IPQ60xx, 无WIFI)
+  cmiot_ax18_nowifi:
+    name: CMIOT-AX18-NOWIFI-${{ inputs.FIREWALL }}
+    uses: ./.github/workflows/main.yml
+    secrets: inherit
+    with:
+      WRT_CONFIG: CMIOT-AX18-NOWIFI
+      WRT_THEME: argon
+      WRT_NAME: Linjw
+      WRT_SSID: LEDE
+      WRT_WORD: none
+      WRT_IP: 192.168.0.1
+      WRT_PW: ' '
+      WRT_REPO: https://github.com/VIKINGYFY/immortalwrt.git
+      WRT_BRANCH: main
+      WRT_SOURCE: VIKINGYFY/immortalwrt
+      WRT_PACKAGE: ''
+      WRT_TEST: 'false'
+      WRTPackageManager: ${{ inputs.PACKAGE_MANAGER }}
+      UPLOAD_TYPE: ${{ inputs.UPLOAD_TYPE }}
+      WRT_FIREWALL: ${{ inputs.FIREWALL }}
