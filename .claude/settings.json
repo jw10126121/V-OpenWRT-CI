@@ -13,7 +13,15 @@
       "Bash(brew install *)",
       "Bash(sed -n '/^safe_update_package/,/^}/p' /Users/shapp/Documents/Git/Linjw/LjwOpenWrt/Scripts/Packages.sh)",
       "Bash(chmod +x /Users/shapp/Documents/Git/Linjw/V-OpenWRT-CI/Scripts/tests/test_notification.sh)",
-      "Bash(bash /Users/shapp/Documents/Git/Linjw/V-OpenWRT-CI/Scripts/tests/test_notification.sh)"
+      "Bash(bash /Users/shapp/Documents/Git/Linjw/V-OpenWRT-CI/Scripts/tests/test_notification.sh)",
+      "Bash(grep -oP '^CONFIG_TARGET_[^_]+_\\\\K[^_=]+\\(?==y$\\)' /Users/shapp/Documents/Git/Linjw/V-OpenWRT-CI/Config/JD-AX6600-WIFI.txt)",
+      "Bash(grep -oP '^CONFIG_TARGET_[^_]+_\\\\K[^_=]+\\(?==y$\\)' /Users/shapp/Documents/Git/Linjw/V-OpenWRT-CI/Config/MEDIATEK-WIFI-YES.txt)",
+      "Bash(grep -oP '^CONFIG_TARGET_[^_]+_\\\\K[^_=]+\\(?==y$\\)' /Users/shapp/Documents/Git/Linjw/V-OpenWRT-CI/Config/CMIOT-AX18-NOWIFI.txt)",
+      "Bash(ggrep -oP '^CONFIG_TARGET_[^_]+_\\\\K[^_=]+\\(?=\\\\=y\\)' /Users/shapp/Documents/Git/Linjw/V-OpenWRT-CI/Config/JD-AX6600-WIFI.txt)",
+      "Bash(/usr/bin/grep -oP '^CONFIG_TARGET_[^_]+_\\\\K[^_=]+\\(?=\\\\=y\\)' /Users/shapp/Documents/Git/Linjw/V-OpenWRT-CI/Config/JD-AX6600-WIFI.txt)",
+      "Bash(gh auth login --hostname github.com --git-protocol https --web 2>&1 & *)",
+      "Read(//dev/**)",
+      "WebFetch(domain:github.com)"
     ],
     "additionalDirectories": [
       "/Users/shapp/.ssh",
