@@ -64,11 +64,26 @@ if [ -n "$manifest" ]; then
     echo "WRT_LIST=$(grep -oP '^luci-(app|theme)[^ ]*' "$manifest" | tr '\n' ' ')" >> "$GITHUB_ENV"
 fi
 
+# 构建系统说明（用于 readme 头部信息）
+SYSTEM_DESC="【${WRT_INFO}】
+固件类型：[${WRT_FIREWALL^^}]
+支持平台：${WRT_TARGET}
+源码来源：${WRT_SOURCE}
+源码分支：${WRT_BRANCH}
+源码HASH：${WRT_HASH:-unknown}
+包管理器：${WRTPackageManager}
+FRP功能：${FRP_TAG}
+默认地址：${WRT_IP:-192.168.0.1}
+默认密码：${WRT_PW:-无}
+WIFI名称：${WRT_SSID:-LEDE}
+WIFI密码：${WRT_WORD:-none}
+内核版本：${WRT_KVER:-}"
+
 # 生成编译说明文件（readme）
 readme_script="${GITHUB_WORKSPACE}/Scripts/readme.sh"
 if [ -f "${readme_script}" ]; then
     chmod +x "${readme_script}"
-    bash "${readme_script}" -c "./.config" -o "./upload/readme_${output_name_prefix}.txt" -r 'false'
+    bash "${readme_script}" -c "./.config" -o "./upload/readme_${output_name_prefix}.txt" -s "${SYSTEM_DESC}" -r 'false'
     echo "【Lin】readme 已生成"
 fi
 
