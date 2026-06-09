@@ -11,7 +11,9 @@
       "Bash(git remote *)",
       "Bash(ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null && git push)",
       "Bash(brew install *)",
-      "Bash(sed -n '/^safe_update_package/,/^}/p' /Users/shapp/Documents/Git/Linjw/LjwOpenWrt/Scripts/Packages.sh)"
+      "Bash(sed -n '/^safe_update_package/,/^}/p' /Users/shapp/Documents/Git/Linjw/LjwOpenWrt/Scripts/Packages.sh)",
+      "Bash(chmod +x /Users/shapp/Documents/Git/Linjw/V-OpenWRT-CI/Scripts/tests/test_notification.sh)",
+      "Bash(bash /Users/shapp/Documents/Git/Linjw/V-OpenWRT-CI/Scripts/tests/test_notification.sh)"
     ],
     "additionalDirectories": [
       "/Users/shapp/.ssh",
