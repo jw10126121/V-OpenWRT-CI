@@ -159,6 +159,13 @@ jobs:
           WRT_TARGET=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' $GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt)
           echo "WRT_TARGET=$WRT_TARGET" >> $GITHUB_ENV
 
+          # 提取设备名列表（用于固件命名）
+          DEVICE_NAME_LIST=$(grep -oP '^CONFIG_TARGET_[^_]+_[^_]+_DEVICE_\K[^=]+(?=\=y)' $GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt | tr '\n' ' ')
+          DEVICE_NAME_LIST_LIAN=$(echo "$DEVICE_NAME_LIST" | tr ' ' '\n' | grep -v '^$' | paste -sd '_and_' -)
+          echo "DEVICE_NAME_LIST=$DEVICE_NAME_LIST" >> $GITHUB_ENV
+          echo "DEVICE_NAME_LIST_LIAN=$DEVICE_NAME_LIST_LIAN" >> $GITHUB_ENV
+          echo "【Lin】设备列表：$DEVICE_NAME_LIST_LIAN"
+
           WRT_REPO_NAME=$(basename "$WRT_REPO" .git)
           echo "WRT_VER=${WRT_REPO_NAME}-${WRT_BRANCH}" >> $GITHUB_ENV
           echo "【Lin】缓存版本标识：${WRT_REPO_NAME}-${WRT_BRANCH}"

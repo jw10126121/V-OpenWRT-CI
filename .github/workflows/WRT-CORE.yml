@@ -114,6 +114,22 @@ jobs:
           echo "WRT_KVER=none" >> $GITHUB_ENV
           echo "WRT_LIST=none" >> $GITHUB_ENV
 
+          # 缓存相关：提取 DEVICE_SUBTARGET 和 DEVICE_NAME_LIST_LIAN
+          DEVICE_SUBTARGET=$(grep -oP '^CONFIG_TARGET_[^_]+_\K[^_]+(?=\=y)' ./Config/$WRT_CONFIG.txt | head -1)
+          echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
+          echo "【Lin】缓存子目标：$DEVICE_SUBTARGET"
+
+          # 提取设备名列表（用于固件命名）
+          DEVICE_NAME_LIST=$(grep -oP '^CONFIG_TARGET_[^_]+_[^_]+_DEVICE_\K[^=]+(?=\=y)' ./Config/$WRT_CONFIG.txt | tr '\n' ' ')
+          DEVICE_NAME_LIST_LIAN=$(echo "$DEVICE_NAME_LIST" | tr ' ' '\n' | grep -v '^$' | paste -sd '_and_' -)
+          echo "DEVICE_NAME_LIST=$DEVICE_NAME_LIST" >> $GITHUB_ENV
+          echo "DEVICE_NAME_LIST_LIAN=$DEVICE_NAME_LIST_LIAN" >> $GITHUB_ENV
+          echo "【Lin】设备列表：$DEVICE_NAME_LIST_LIAN"
+
+          WRT_REPO_NAME=$(basename "$WRT_REPO" .git)
+          echo "WRT_VER=${WRT_REPO_NAME}-${WRT_BRANCH}" >> $GITHUB_ENV
+          echo "【Lin】缓存版本标识：${WRT_REPO_NAME}-${WRT_BRANCH}"
+
       - name: Show Build Config (显示编译配置)
         run: |
           echo "=========================================="

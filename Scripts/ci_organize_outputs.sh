@@ -2,7 +2,7 @@
 # 说明：
 # 1. 在 CI 末尾整理编译产物：配置文件、插件列表、固件镜像、安装包压缩包。
 # 2. 输出目录 ./upload/ 供 artifact / release 上传使用。
-# 3. 命名格式参考 LjwOpenWrt：subtarget_设备名_FW_FRP_版本_时间
+# 3. 命名格式与 LjwOpenWrt 一致：subtarget_设备名_FW_FRP_版本_时间
 
 set -euo pipefail
 
@@ -14,12 +14,11 @@ set -euo pipefail
 : "${WRT_DATE:?WRT_DATE is required}"
 : "${WRT_TARGET:?WRT_TARGET is required}"
 : "${WRT_WIFI:?WRT_WIFI is required}"
+: "${DEVICE_SUBTARGET:?DEVICE_SUBTARGET is required}"
+: "${DEVICE_NAME_LIST_LIAN:?DEVICE_NAME_LIST_LIAN is required}"
 
-# 构建统一命名前缀（参考 LjwOpenWrt）
+# 构建统一命名前缀（与 LjwOpenWrt 一致）
 # 格式：subtarget_设备名_FW版本_FRP角色_源码版本_编译时间
-DEVICE_NAME=$(echo "$WRT_CONFIG" | sed 's/-NOWIFI//g; s/-WIFI-YES//g; s/-WIFI-NO//g; s/-WIFI//g')
-DEVICE_NAME_LOWER=$(echo "$DEVICE_NAME" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
-
 # 检测 FRP 角色
 FRP_TAG="none"
 if grep -q "^CONFIG_PACKAGE_luci-app-frpc=y" ./.config 2>/dev/null; then
@@ -36,7 +35,7 @@ BUILD_VARIANT_TAG="${WRT_FIREWALL^^}"
 [ "$FRP_TAG" != "none" ] && BUILD_VARIANT_TAG="${BUILD_VARIANT_TAG}_${FRP_TAG}"
 
 WRT_REPO_NAME=$(basename "${WRT_REPO:-unknown}" .git 2>/dev/null || echo "unknown")
-output_name_prefix="${DEVICE_SUBTARGET:-unknown}_${DEVICE_NAME_LOWER}_${BUILD_VARIANT_TAG}_${WRT_REPO_NAME}-${WRT_BRANCH}_${START_TIME:-${WRT_DATE}}"
+output_name_prefix="${DEVICE_SUBTARGET}_${DEVICE_NAME_LIST_LIAN}_${BUILD_VARIANT_TAG}_${WRT_REPO_NAME}-${WRT_BRANCH}_${START_TIME:-${WRT_DATE}}"
 
 echo "【Lin】输出命名前缀：${output_name_prefix}"
 
@@ -92,12 +91,19 @@ fi
 rm -rf "${tmp_dir}"
 
 # 整理固件镜像：按设备名重命名后移入 upload/
-for FILE in $(find ./bin/targets/ -type f -iname "*${WRT_TARGET}*"); do
-    EXT=$(basename "$FILE" | cut -d '.' -f 2-)
-    NAME=$(basename "$FILE" | cut -d '.' -f 1 | grep -io "\(${WRT_TARGET}\).*")
-    IMAGE_KIND="${NAME#${WRT_TARGET}-}"
-    NEW_FILE="${output_name_prefix}_${IMAGE_KIND}.${EXT}"
-    mv -f "$FILE" "./upload/${NEW_FILE}"
+# 与 LjwOpenWrt 一致，遍历每个设备名进行重命名
+for type in ${DEVICE_NAME_LIST:-}; do
+    while IFS= read -r file; do
+        [ -z "${file}" ] && continue
+
+        # 保留原始扩展名，例如 bin / img.gz / itb
+        ext="$(basename "${file}" | cut -d '.' -f 2-)"
+        # 从原始文件名中提取"设备名起始后的剩余主体"
+        name="$(basename "${file}" | cut -d '.' -f 1 | grep -io "\(${type}\).*")"
+        image_kind="${name#${type}-}"
+        new_file="${output_name_prefix}_${image_kind}.${ext}"
+        mv -f "${file}" "./upload/${new_file}"
+    done < <(find ./bin/targets/ -type f -iname "*${type}*.*")
 done
 
 # 兜底搬运剩余目标文件（如 manifest 等）
