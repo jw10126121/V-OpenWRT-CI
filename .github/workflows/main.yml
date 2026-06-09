@@ -108,6 +108,7 @@ jobs:
         run: |
           echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
           echo "START_TIME=$(date +"D%y%m%d_T%H%M%S")" >> $GITHUB_ENV
+          echo "START_DATE=$(date +"D%y%m%d")" >> $GITHUB_ENV
           echo "WRT_MARK=${GITHUB_REPOSITORY%%/*}" >> $GITHUB_ENV
           echo "WRT_INFO=${WRT_SOURCE%%/*}" >> $GITHUB_ENV
           echo "WRT_WIFI=wifi-yes" >> $GITHUB_ENV
@@ -198,8 +199,9 @@ jobs:
         if: env.WRT_TEST != 'true'
         uses: actions/cache/restore@v5
         with:
-          key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}
+          key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-${{ env.START_DATE }}
           restore-keys: |
+            ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-
             ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-
           path: |
             ./wrt/.ccache
@@ -431,7 +433,7 @@ jobs:
         if: always() && env.WRT_TEST != 'true' && steps.evaluate_cache_save_inputs.outputs.ccache_present == 'true'
         uses: actions/cache/save@v5
         with:
-          key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}
+          key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-${{ env.START_DATE }}
           path: |
             ./wrt/.ccache
 
