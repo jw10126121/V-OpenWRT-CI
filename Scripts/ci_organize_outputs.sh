@@ -79,13 +79,18 @@ WIFI名称：${WRT_SSID:-LEDE}
 WIFI密码：${WRT_WORD:-none}
 内核版本：${WRT_KVER:-}"
 
+# 将系统说明写入临时文件（避免多行字符串参数传递问题）
+SYSTEM_DESC_FILE=$(mktemp)
+echo "${SYSTEM_DESC}" > "${SYSTEM_DESC_FILE}"
+
 # 生成编译说明文件（readme）
 readme_script="${GITHUB_WORKSPACE}/Scripts/readme.sh"
 if [ -f "${readme_script}" ]; then
     chmod +x "${readme_script}"
-    bash "${readme_script}" -c "./.config" -o "./upload/readme_${output_name_prefix}.txt" -s "${SYSTEM_DESC}" -r 'false'
+    bash "${readme_script}" -c "./.config" -o "./upload/readme_${output_name_prefix}.txt" -s "$(cat "${SYSTEM_DESC_FILE}")" -r 'false'
     echo "【Lin】readme 已生成"
 fi
+rm -f "${SYSTEM_DESC_FILE}"
 
 # 清理不需要上传的文件（保留 manifest）
 find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +
