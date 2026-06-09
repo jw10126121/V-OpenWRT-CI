@@ -109,6 +109,7 @@ jobs:
           echo "WRT_DATE=$(date +"D%y%m%d_T%H%M%S")" >> $GITHUB_ENV
           echo "START_TIME=$(date +"D%y%m%d_T%H%M%S")" >> $GITHUB_ENV
           echo "START_DATE=$(date +"D%y%m%d")" >> $GITHUB_ENV
+          echo "CCACHE_TIME=$(date +"D%y%m%d_T%H%M")" >> $GITHUB_ENV
           echo "WRT_MARK=${GITHUB_REPOSITORY%%/*}" >> $GITHUB_ENV
           echo "WRT_INFO=${WRT_SOURCE%%/*}" >> $GITHUB_ENV
           echo "WRT_WIFI=wifi-yes" >> $GITHUB_ENV
@@ -182,6 +183,12 @@ jobs:
         run: |
           find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
 
+      - name: Clean Build Environment
+        if: env.WRT_TEST != 'true'
+        run: |
+          cd ./wrt/
+          make clean -j$(nproc)
+
       - name: Restore Toolchain Cache
         id: restore_toolchain_cache
         if: env.WRT_TEST != 'true'
@@ -200,8 +207,9 @@ jobs:
         if: env.WRT_TEST != 'true'
         uses: actions/cache/restore@v5
         with:
-          key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-${{ env.START_DATE }}
+          key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-${{ env.CCACHE_TIME }}
           restore-keys: |
+            ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-${{ env.START_DATE }}-
             ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-
             ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-
           path: |
@@ -266,8 +274,6 @@ jobs:
           if [ -f ./scripts/diffconfig.sh ]; then
             bash ./scripts/diffconfig.sh > ./seed.config
           fi
-
-          make clean -j$(nproc)
 
       - name: Download Packages
         if: env.WRT_TEST != 'true'
@@ -434,7 +440,7 @@ jobs:
         if: always() && env.WRT_TEST != 'true' && steps.evaluate_cache_save_inputs.outputs.ccache_present == 'true'
         uses: actions/cache/save@v5
         with:
-          key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-${{ env.START_DATE }}
+          key: ccache-${{ runner.os }}-${{ env.DEVICE_SUBTARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}-${{ env.CCACHE_TIME }}
           path: |
             ./wrt/.ccache
 
