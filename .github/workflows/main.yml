@@ -184,12 +184,6 @@ jobs:
         run: |
           find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
 
-      - name: Clean Build Environment
-        if: env.WRT_TEST != 'true'
-        run: |
-          cd ./wrt/
-          make clean -j$(nproc)
-
       - name: Restore Toolchain Cache
         id: restore_toolchain_cache
         if: env.WRT_TEST != 'true'
