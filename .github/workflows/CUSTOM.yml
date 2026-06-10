@@ -53,7 +53,7 @@ jobs:
     secrets: inherit
     with:
       WRT_CONFIG: GL-MT6000-WIFI
-      WRT_THEME: argon
+      WRT_THEME: noobwrt
       WRT_NAME: Linjw
       WRT_SSID: LEDE
       WRT_WORD: none
@@ -75,7 +75,7 @@ jobs:
     secrets: inherit
     with:
       WRT_CONFIG: JD-AX6600-WIFI
-      WRT_THEME: argon
+      WRT_THEME: noobwrt
       WRT_NAME: Linjw
       WRT_SSID: LEDE
       WRT_WORD: none
@@ -97,7 +97,7 @@ jobs:
     secrets: inherit
     with:
       WRT_CONFIG: CMIOT-AX18-NOWIFI
-      WRT_THEME: argon
+      WRT_THEME: noobwrt
       WRT_NAME: Linjw
       WRT_SSID: LEDE
       WRT_WORD: none
