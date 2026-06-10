@@ -85,6 +85,13 @@ jobs:
       - name: Checkout Projects
         uses: actions/checkout@main
 
+      - name: Prepare Build Disk Space (清理并合并磁盘)
+        uses: sbwml/actions@free-disk
+        with:
+          build-mount-path: /builder
+          root-reserve-gb: '1'
+          swap-size-gb: '1'
+
       - name: Initialization Environment
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -101,9 +108,9 @@ jobs:
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
 
-          sudo mkdir -p /mnt/build_wrt
-          sudo chown $USER:$USER /mnt/build_wrt
-          sudo ln -s /mnt/build_wrt $GITHUB_WORKSPACE/wrt
+          sudo mkdir -p /builder/openwrt
+          sudo chown $USER:$USER /builder/openwrt
+          sudo ln -s /builder/openwrt $GITHUB_WORKSPACE/wrt
 
       - name: Initialization Values
         run: |
@@ -399,15 +406,15 @@ jobs:
 
           echo "【Lin】Release 已发布：${release_tag}"
 
-      - name: Cleanup Workspace Before Cache Save
-        if: always()
-        working-directory: ./wrt
-        run: |
-          echo "【Lin】为缓存保存释放磁盘空间..."
-          rm -rf build_dir bin tmp logs upload
-          if [ -d staging_dir ]; then
-            find staging_dir -maxdepth 1 -mindepth 1 -type d \( -name 'target-*' -o -name 'packages' -o -name 'pkginfo' \) -exec rm -rf {} +
-          fi
+      # - name: Cleanup Workspace Before Cache Save
+      #   if: always()
+      #   working-directory: ./wrt
+      #   run: |
+      #     echo "【Lin】为缓存保存释放磁盘空间..."
+      #     rm -rf build_dir bin tmp logs upload
+      #     if [ -d staging_dir ]; then
+      #       find staging_dir -maxdepth 1 -mindepth 1 -type d \( -name 'target-*' -o -name 'packages' -o -name 'pkginfo' \) -exec rm -rf {} +
+      #     fi
 
       - name: Evaluate Cache Save Inputs
         id: evaluate_cache_save_inputs
