@@ -21,7 +21,8 @@
       "Bash(/usr/bin/grep -oP '^CONFIG_TARGET_[^_]+_\\\\K[^_=]+\\(?=\\\\=y\\)' /Users/shapp/Documents/Git/Linjw/V-OpenWRT-CI/Config/JD-AX6600-WIFI.txt)",
       "Bash(gh auth login --hostname github.com --git-protocol https --web 2>&1 & *)",
       "Read(//dev/**)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(bash -n /Users/shapp/Documents/Git/Linjw/V-OpenWRT-CI/Scripts/ci_create_start_notification.sh)"
     ],
     "additionalDirectories": [
       "/Users/shapp/.ssh",
